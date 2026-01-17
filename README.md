@@ -1,107 +1,97 @@
 # PrioritiAI Frontend
 
-Next.js web application for the Smart Task Prioritizer.
+Next.js web application for the AI Productivity Suite.
 
 ## Tech Stack
 
 - **Framework**: Next.js 14 (App Router)
 - **Language**: TypeScript
-- **Styling**: Tailwind CSS v4 + PostCSS
+- **Styling**: Tailwind CSS v4 + CSS Variables
 - **State**: React Context
-- **Theme**: Dark/Light mode (Tailwind + CSS Variables)
+- **Theme**: Dark/Light mode
+
+## Features
+
+- **🚀 Multi-App Suite**: Extensible productivity app platform
+- **✨ Task Prioritizer**: AI-powered task organization with energy context
+- **📅 Daily Planner**: AI-generated time-blocked schedules
+- **🌈 Mood Journal**: AI sentiment analysis with monthly insights
+- **🔧 Admin Dashboard**: User management and feature toggles
+- **📱 Responsive UI**: Mobile-first design across all pages
+- **🌓 Theme Support**: System-aware Dark/Light mode
 
 ## Getting Started
 
-### 1. Install Dependencies
-
 ```bash
+# Install
 npm install
-```
 
-### 2. Configure Environment
-
-Create `.env.local`:
-
-```env
+# Configure (.env.local)
 NEXT_PUBLIC_API_URL=http://localhost:8000/api
-```
 
-### 3. Run Development Server
-
-```bash
+# Run
 npm run dev
 ```
 
 Open `http://localhost:3000`
 
-## Scripts
-
-| Script          | Description          |
-| --------------- | -------------------- |
-| `npm run dev`   | Start dev server     |
-| `npm run build` | Build for production |
-| `npm start`     | Run production build |
-| `npm run lint`  | Run ESLint           |
-
 ## Project Structure
 
 ```
 src/
-├── app/                      # Next.js App Router
-│   ├── page.tsx              # Landing page
-│   ├── apps/                 # Apps Suite
+├── app/
+│   ├── page.tsx              # Landing
+│   ├── login/                # Auth pages
+│   ├── register/
+│   ├── apps/
 │   │   ├── page.tsx          # Apps List
-│   │   └── task-prioritizer/ # Task Prioritizer App
-│   │       └── page.tsx      # Main app view
-│   ├── login/                # Login page
-│   └── register/             # Register page
+│   │   ├── task-prioritizer/ # Task Prioritizer
+│   │   ├── daily-planner/    # Daily Planner + History
+│   │   └── mood-journal/     # Mood Journal + Insights
+│   └── admin/                # Admin Dashboard
 │
-├── components/               # React components
-│   ├── ui/                   # Reusable (Button, ThemeToggle)
-│   ├── BrainDump.tsx         # Task input textarea
-│   ├── EnergySelector.tsx    # Energy level selector
-│   └── TaskCard.tsx          # Prioritized task display
+├── components/
+│   ├── ui/                   # Button, ThemeToggle, Toast
+│   ├── BrainDump.tsx         # Task input
+│   ├── EnergySelector.tsx    # Energy level picker
+│   ├── TaskCard.tsx          # Task display
+│   └── Timeline.tsx          # Schedule visualization
 │
-├── context/                  # React Context
-│   └── AuthContext.tsx       # Auth state management
+├── context/
+│   └── AuthContext.tsx       # Auth state
 │
-├── lib/                      # Utilities
-│   └── api.ts                # API client with token management
-│
-└── styles/                   # Global CSS
-    └── globals.css           # Tailwind directives & theme variables
+└── lib/
+    └── api.ts                # API client
 ```
 
-## Features
+## Apps
 
-- **🚀 Multi-App Suite**: Extensible app architecture
-- **✨ Task Prioritizer**: AI-powered task organization
-  - **🧠 Brain Dump**: Freeform task input
-  - **⚡ Energy Context**: Prioritize based on user energy
-  - **📋 History Sidebar**: View and manage previous schedules
-- **🌓 Theme Support**: System-aware Dark/Light mode
-- **🔐 Authentication**: Laravel Sanctum integration
-- **📱 Responsive**: Mobile-first design with Tailwind CSS
+### Task Prioritizer
 
-## Theme System
+AI analyzes your task list and energy level to create an optimal priority order.
 
-Tailwind CSS v4 handles styling, with CSS variables defining the color palette in `globals.css` to support dynamic theming:
+### Daily Planner
 
-```css
-:root {
-  --bg-primary: #ffffff;
-  --accent: #6366f1;
-  /* ... */
-}
+Input your tasks and work hours; AI generates a realistic time-blocked schedule.
 
-[data-theme="dark"] {
-  --bg-primary: #0f172a;
-  --accent: #818cf8;
-  /* ... */
-}
-```
+### Mood Journal
 
-Components consume these variables via Tailwind or inline styles.
+Write 1-2 sentences about your day. AI extracts:
+
+- Mood score (-1 to +1)
+- Mood label (happy, stressed, calm, etc.)
+- Entities (activities, people, places)
+
+Monthly insights show patterns and correlations.
+
+## Scripts
+
+| Script          | Description        |
+| --------------- | ------------------ |
+| `npm run dev`   | Development server |
+| `npm run build` | Production build   |
+| `npm start`     | Run production     |
+| `npm run lint`  | ESLint             |
 
 ## License
 
