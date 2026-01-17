@@ -61,7 +61,6 @@ class ApiClient {
     const data = await response.json();
 
     if (!response.ok) {
-      // Laravel validation errors or general errors
       const errorMessage = (data as ApiError).error || 
                           (data as ApiError).message ||
                           (data.errors ? Object.values(data.errors).flat().join(', ') : 'Request failed');
@@ -74,7 +73,7 @@ class ApiClient {
   // Auth methods
   async register(email: string, password: string, name: string) {
     const data = await this.request<{
-      user: { id: number; email: string; name: string };
+      user: User;
       accessToken: string;
     }>('/auth/register', {
       method: 'POST',
@@ -87,7 +86,7 @@ class ApiClient {
 
   async login(email: string, password: string) {
     const data = await this.request<{
-      user: { id: number; email: string; name: string };
+      user: User;
       accessToken: string;
     }>('/auth/login', {
       method: 'POST',
@@ -108,21 +107,24 @@ class ApiClient {
     }
   }
 
-  // API methods
+  async getUser() {
+    return this.request<{ user: User }>('/user');
+  }
+
+  async getUserFeatures() {
+    return this.request<{ features: Feature[] }>('/user/features');
+  }
+
+  // Task Prioritizer methods
   async prioritize(brainDump: string, energyLevel: string) {
-    return this.request<{
-      schedule: Schedule;
-    }>('/prioritize', {
+    return this.request<{ schedule: Schedule }>('/prioritize', {
       method: 'POST',
       body: JSON.stringify({ brainDump, energyLevel }),
     });
   }
 
   async getSchedules(limit = 10, offset = 0) {
-    return this.request<{
-      schedules: Schedule[];
-      total: number;
-    }>(`/schedules?limit=${limit}&offset=${offset}`);
+    return this.request<{ schedules: Schedule[]; total: number }>(`/schedules?limit=${limit}&offset=${offset}`);
   }
 
   async getSchedule(id: string) {
@@ -130,9 +132,7 @@ class ApiClient {
   }
 
   async deleteSchedule(id: string) {
-    return this.request<{ message: string }>(`/schedules/${id}`, {
-      method: 'DELETE',
-    });
+    return this.request<{ message: string }>(`/schedules/${id}`, { method: 'DELETE' });
   }
 
   async updateTask(id: string, data: { isCompleted?: boolean; order?: number }) {
@@ -141,9 +141,49 @@ class ApiClient {
       body: JSON.stringify(data),
     });
   }
+
+  // Admin methods
+  async adminGetFeatures() {
+    return this.request<{ features: Feature[] }>('/admin/features');
+  }
+
+  async adminToggleFeature(id: number, isEnabled: boolean) {
+    return this.request<{ feature: Feature }>(`/admin/features/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ is_enabled: isEnabled }),
+    });
+  }
+
+  async adminGetUsers() {
+    return this.request<{ users: AdminUser[] }>('/admin/users');
+  }
+
+  async adminGetUser(userId: number) {
+    return this.request<{ user: AdminUser; features: Feature[] }>(`/admin/users/${userId}`);
+  }
+
+  async adminUpdateUserRole(userId: number, role: 'user' | 'admin') {
+    return this.request<{ user: AdminUser }>(`/admin/users/${userId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    });
+  }
+
+  async adminToggleUserFeature(userId: number, featureId: number, isEnabled: boolean) {
+    return this.request<{ message: string }>(`/admin/users/${userId}/features/${featureId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ is_enabled: isEnabled }),
+    });
+  }
+
+  async adminRemoveUserFeatureOverride(userId: number, featureId: number) {
+    return this.request<{ message: string }>(`/admin/users/${userId}/features/${featureId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
-// Types - matching Laravel's snake_case responses
+// Types
 export interface Task {
   id: string;
   title: string;
@@ -167,8 +207,25 @@ export interface User {
   id: number;
   email: string;
   name: string;
+  role: 'user' | 'admin';
 }
 
-// Singleton instance
+export interface AdminUser {
+  id: number;
+  name: string;
+  email: string;
+  role: 'user' | 'admin';
+  created_at: string;
+}
+
+export interface Feature {
+  id: number;
+  slug: string;
+  name: string;
+  description: string;
+  is_enabled: boolean;
+}
+
+// Singleton
 export const api = new ApiClient();
 export default api;
