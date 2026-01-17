@@ -1,0 +1,48 @@
+.toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 64px;
+  height: 32px;
+  padding: 4px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.toggle:hover {
+  border-color: var(--accent);
+}
+
+.icon {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--text-muted);
+  transition: color var(--transition-fast);
+}
+
+.icon.active {
+  color: var(--accent);
+}
+
+.slider {
+  position: absolute;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  background: var(--bg-card);
+  border-radius: 50%;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-normal);
+}
+
+.sliderDark {
+  transform: translateX(32px);
+}
