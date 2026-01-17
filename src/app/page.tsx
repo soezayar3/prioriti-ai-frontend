@@ -3,9 +3,9 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import styles from './page.module.css';
+import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import styles from './page.module.css';
 
 export default function Home() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -13,7 +13,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push('/dashboard');
+      router.push('/apps');
     }
   }, [isAuthenticated, isLoading, router]);
 
@@ -26,80 +26,42 @@ export default function Home() {
   }
 
   return (
-    <main className={styles.main}>
-      <div className={styles.themeToggleWrapper}>
-        <ThemeToggle />
-      </div>
-      
+    <main className={styles.container}>
       <div className={styles.hero}>
-        <div className={styles.badge}>✨ AI-Powered Productivity</div>
-        <h1 className={styles.title}>
-          Turn Your <span className="gradient-text">Brain Dump</span> Into
-          <br />
-          A Prioritized Schedule
-        </h1>
-        <p className={styles.subtitle}>
-          Stop feeling overwhelmed. Just dump all your tasks, tell us your energy level,
-          and let AI organize your day for maximum productivity.
-        </p>
-        
-        <div className={styles.cta}>
-          <Button size="lg" onClick={() => router.push('/register')}>
-            Get Started Free
-          </Button>
-          <Button variant="secondary" size="lg" onClick={() => router.push('/login')}>
-            Sign In
-          </Button>
-        </div>
-        
-        <div className={styles.features}>
-          <div className={styles.feature}>
-            <span className={styles.featureIcon}>🧠</span>
-            <span>Brain Dump Input</span>
-          </div>
-          <div className={styles.feature}>
-            <span className={styles.featureIcon}>⚡</span>
-            <span>Energy-Aware</span>
-          </div>
-          <div className={styles.feature}>
-            <span className={styles.featureIcon}>🤖</span>
-            <span>AI Prioritization</span>
+        <div className={styles.heroContent}>
+          <h1 className={styles.title}>
+            <span className={styles.titleIcon}>🚀</span>
+            PrioritiAI
+          </h1>
+          <p className={styles.subtitle}>
+            Your AI-powered productivity suite
+          </p>
+          <p className={styles.description}>
+            Transform chaos into clarity. Let AI help you prioritize tasks, 
+            plan your day, and boost your productivity.
+          </p>
+          <div className={styles.cta}>
+            <Link href="/register">
+              <Button size="lg">Get Started Free</Button>
+            </Link>
+            <Link href="/login">
+              <Button variant="secondary" size="lg">Sign In</Button>
+            </Link>
           </div>
         </div>
-      </div>
-      
-      <div className={styles.demo}>
-        <div className={styles.demoCard}>
-          <div className={styles.demoHeader}>
-            <div className={styles.demoDots}>
-              <span></span><span></span><span></span>
+        <div className={styles.heroVisual}>
+          <div className={styles.appPreview}>
+            <div className={styles.previewCard}>
+              <span className={styles.previewIcon}>✨</span>
+              <span>Task Prioritizer</span>
             </div>
-          </div>
-          <div className={styles.demoContent}>
-            <div className={styles.demoInput}>
-              <p>📝 Fix login bug, buy milk, reply to emails, research project, call mom...</p>
+            <div className={styles.previewCard}>
+              <span className={styles.previewIcon}>📅</span>
+              <span>Daily Planner</span>
             </div>
-            <div className={styles.demoArrow}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 5v14M19 12l-7 7-7-7"/>
-              </svg>
-            </div>
-            <div className={styles.demoOutput}>
-              <div className={styles.demoTask}>
-                <span className={styles.taskNum}>1</span>
-                <span className={styles.taskBadge} data-priority="high">High</span>
-                <span>Fix login bug</span>
-              </div>
-              <div className={styles.demoTask}>
-                <span className={styles.taskNum}>2</span>
-                <span className={styles.taskBadge} data-priority="medium">Med</span>
-                <span>Reply to emails</span>
-              </div>
-              <div className={styles.demoTask}>
-                <span className={styles.taskNum}>3</span>
-                <span className={styles.taskBadge} data-priority="low">Low</span>
-                <span>Buy milk</span>
-              </div>
+            <div className={styles.previewCard}>
+              <span className={styles.previewIcon}>📝</span>
+              <span>Meeting Notes</span>
             </div>
           </div>
         </div>
