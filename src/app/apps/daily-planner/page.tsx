@@ -68,9 +68,9 @@ export default function DailyPlannerPage() {
   if (authLoading) return null;
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--bg-primary)' }}>
+    <div className="min-h-screen flex flex-col md:flex-row" style={{ background: 'var(--bg-primary)' }}>
       {/* Sidebar - Input */}
-      <aside className="w-96 p-6 border-r flex flex-col h-screen sticky top-0 overflow-y-auto" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
+      <aside className="w-full md:w-96 p-4 md:p-6 border-b md:border-b-0 md:border-r flex flex-col md:h-screen md:sticky md:top-0 overflow-y-auto" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <button onClick={() => router.push('/apps')} className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity">
@@ -80,7 +80,7 @@ export default function DailyPlannerPage() {
               📜 History
             </button>
           </div>
-          <h1 className="text-2xl font-bold mb-2 icon-gradient">Daily Planner</h1>
+          <h1 className="text-xl md:text-2xl font-bold mb-2 icon-gradient">Daily Planner</h1>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Turn your tasks into a realistic schedule.</p>
         </div>
 
@@ -92,7 +92,7 @@ export default function DailyPlannerPage() {
               value={brainDump}
               onChange={(e) => setBrainDump(e.target.value)}
               placeholder="What do you need to get done today? e.g.&#10;- Finish report (2h)&#10;- Call mom&#10;- Review PRs"
-              className="w-full h-48 rounded-xl p-4 resize-none transition-all focus:ring-2 focus:ring-indigo-500 outline-none"
+              className="w-full h-32 md:h-48 rounded-xl p-4 resize-none transition-all focus:ring-2 focus:ring-indigo-500 outline-none"
               style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)' }}
             />
           </div>
@@ -139,7 +139,7 @@ export default function DailyPlannerPage() {
           </button>
         </div>
 
-        <div className="mt-8 pt-6 border-t" style={{ borderColor: 'var(--border-color)' }}>
+        <div className="mt-4 md:mt-8 pt-4 md:pt-6 border-t" style={{ borderColor: 'var(--border-color)' }}>
           <div className="flex items-center justify-between">
             <ThemeToggle />
             <div className="flex items-center gap-3">
@@ -153,7 +153,7 @@ export default function DailyPlannerPage() {
       </aside>
 
       {/* Main Content - Timeline */}
-      <main className="flex-1 p-8 overflow-y-auto">
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         <div className="max-w-2xl mx-auto">
           {schedule.length > 0 ? (
             <>

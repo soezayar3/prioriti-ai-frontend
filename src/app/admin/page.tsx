@@ -136,26 +136,26 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 sticky top-0 z-50 border-b" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-        <div className="flex items-center gap-4">
-          <Link href="/apps" className="text-sm px-3 py-2 rounded-lg transition-colors" style={{ color: 'var(--text-secondary)' }}>
-            ← Apps
+      <header className="flex items-center justify-between px-4 md:px-6 py-4 sticky top-0 z-50 border-b" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+        <div className="flex items-center gap-2 md:gap-4">
+          <Link href="/apps" className="text-sm px-2 md:px-3 py-2 rounded-lg transition-colors" style={{ color: 'var(--text-secondary)' }}>
+            ←<span className="hidden sm:inline"> Apps</span>
           </Link>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--accent)' }}>🔧 Admin Dashboard</h1>
+          <h1 className="text-base sm:text-xl font-bold" style={{ color: 'var(--accent)' }}>🔧 <span className="hidden xs:inline">Admin </span>Dashboard</h1>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           <ThemeToggle />
-          <div className="flex items-center gap-3">
-            <span className="text-sm px-2 py-1 rounded font-medium" style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}>Admin</span>
-            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{user?.name}</span>
+          <div className="flex items-center gap-2 md:gap-3">
+            <span className="hidden sm:inline text-sm px-2 py-1 rounded font-medium" style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}>Admin</span>
+            <span className="hidden md:inline text-sm" style={{ color: 'var(--text-secondary)' }}>{user?.name}</span>
             <button onClick={logout} className="btn-ghost text-sm">Logout</button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
+      <main className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8">
         {/* Tabs */}
-        <div className="flex gap-2 mb-8">
+        <div className="flex gap-2 mb-6 md:mb-8 overflow-x-auto">
           <button
             onClick={() => setActiveTab('features')}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${activeTab === 'features' ? 'btn-primary' : 'btn-ghost'}`}
@@ -202,7 +202,7 @@ export default function AdminDashboard() {
 
         {/* Users Tab */}
         {activeTab === 'users' && (
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Users List */}
             <div className="card">
               <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Users</h2>

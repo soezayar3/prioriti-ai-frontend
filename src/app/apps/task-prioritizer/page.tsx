@@ -150,23 +150,23 @@ export default function TaskPrioritizerPage() {
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 sticky top-0 z-50 border-b" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-        <div className="flex items-center gap-4">
-          <Link href="/apps" className="text-sm px-3 py-2 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800" style={{ color: 'var(--text-secondary)' }}>
-            ← Apps
+      <header className="flex items-center justify-between px-4 md:px-6 py-4 sticky top-0 z-50 border-b" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+        <div className="flex items-center gap-2 md:gap-4">
+          <Link href="/apps" className="text-sm px-2 md:px-3 py-2 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800" style={{ color: 'var(--text-secondary)' }}>
+            ←<span className="hidden sm:inline"> Apps</span>
           </Link>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--accent)' }}>✨ Task Prioritizer</h1>
+          <h1 className="text-base sm:text-xl font-bold" style={{ color: 'var(--accent)' }}>✨ <span className="hidden xs:inline">Task </span>Prioritizer</h1>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           <button
             onClick={() => setShowHistory(!showHistory)}
             className="btn-ghost text-sm"
           >
-            📋 History ({scheduleHistory.length})
+            📋 <span className="hidden sm:inline">History </span>({scheduleHistory.length})
           </button>
           <ThemeToggle />
-          <div className="flex items-center gap-3">
-            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{user?.name}</span>
+          <div className="flex items-center gap-2 md:gap-3">
+            <span className="hidden md:inline text-sm" style={{ color: 'var(--text-secondary)' }}>{user?.name}</span>
             <button onClick={logout} className="btn-ghost text-sm">Logout</button>
           </div>
         </div>
@@ -174,7 +174,7 @@ export default function TaskPrioritizerPage() {
 
       <div className="flex relative">
         {/* History Sidebar */}
-        <aside className={`fixed top-[65px] right-0 w-80 h-[calc(100vh-65px)] border-l overflow-y-auto transition-transform duration-300 z-40 ${showHistory ? 'translate-x-0' : 'translate-x-full'}`} style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+        <aside className={`fixed top-[65px] right-0 w-full sm:w-80 h-[calc(100vh-65px)] border-l overflow-y-auto transition-transform duration-300 z-40 ${showHistory ? 'translate-x-0' : 'translate-x-full'}`} style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
           <div className="flex justify-between items-center px-5 py-4 border-b sticky top-0" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
             <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Task History</h3>
             <button onClick={() => setShowHistory(false)} className="text-lg opacity-60 hover:opacity-100" style={{ color: 'var(--text-secondary)' }}>✕</button>
@@ -225,7 +225,7 @@ export default function TaskPrioritizerPage() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 max-w-3xl mx-auto px-6 py-8">
+        <main className="flex-1 max-w-3xl mx-auto px-4 md:px-6 py-6 md:py-8">
           {currentSchedule ? (
             <div className="animate-fade-in">
               <div className="flex items-start justify-between gap-4 mb-8 flex-wrap">

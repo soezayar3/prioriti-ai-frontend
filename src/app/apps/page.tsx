@@ -119,20 +119,20 @@ export default function AppsPage() {
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 sticky top-0 z-50 border-b" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>🚀 PrioritiAI</h1>
-        <div className="flex items-center gap-4">
+      <header className="flex items-center justify-between px-4 md:px-6 py-4 sticky top-0 z-50 border-b" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
+        <h1 className="text-xl md:text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>🚀 PrioritiAI</h1>
+        <div className="flex items-center gap-2 md:gap-4">
           {user?.role === 'admin' && (
             <Link href="/admin" className="btn-ghost text-sm flex items-center gap-1">
-              🔧 Admin
+              <span className="hidden sm:inline">🔧</span> Admin
             </Link>
           )}
           <ThemeToggle />
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             {user?.role === 'admin' && (
-              <span className="text-xs px-2 py-1 rounded font-medium" style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}>Admin</span>
+              <span className="hidden sm:inline text-xs px-2 py-1 rounded font-medium" style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}>Admin</span>
             )}
-            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{user?.name}</span>
+            <span className="hidden md:inline text-sm" style={{ color: 'var(--text-secondary)' }}>{user?.name}</span>
             <button onClick={logout} className="btn-ghost text-sm">Logout</button>
           </div>
         </div>
