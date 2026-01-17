@@ -33,7 +33,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 ### 2. Supabase Setup
 
-Run the SQL in `supabase_schema.md` to create tables and RLS policies.
+Run the SQL in `supabase/schema.sql` to create tables and RLS policies.
 
 ### 3. Edge Functions
 
