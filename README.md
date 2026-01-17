@@ -6,8 +6,9 @@ Next.js web application for the Smart Task Prioritizer.
 
 - **Framework**: Next.js 14 (App Router)
 - **Language**: TypeScript
-- **Styling**: CSS Modules + CSS Variables
+- **Styling**: Tailwind CSS v4 + PostCSS
 - **State**: React Context
+- **Theme**: Dark/Light mode (Tailwind + CSS Variables)
 
 ## Getting Started
 
@@ -46,43 +47,45 @@ Open `http://localhost:3000`
 
 ```
 src/
-├── app/                 # Next.js App Router
-│   ├── page.tsx         # Landing page
-│   ├── login/           # Login page
-│   ├── register/        # Register page
-│   └── dashboard/       # Main app
+├── app/                      # Next.js App Router
+│   ├── page.tsx              # Landing page
+│   ├── apps/                 # Apps Suite
+│   │   ├── page.tsx          # Apps List
+│   │   └── task-prioritizer/ # Task Prioritizer App
+│   │       └── page.tsx      # Main app view
+│   ├── login/                # Login page
+│   └── register/             # Register page
 │
-├── components/          # React components
-│   ├── ui/              # Reusable (Button, ThemeToggle)
-│   ├── BrainDump.tsx    # Task input textarea
-│   ├── EnergySelector.tsx
-│   └── TaskCard.tsx     # Prioritized task display
+├── components/               # React components
+│   ├── ui/                   # Reusable (Button, ThemeToggle)
+│   ├── BrainDump.tsx         # Task input textarea
+│   ├── EnergySelector.tsx    # Energy level selector
+│   └── TaskCard.tsx          # Prioritized task display
 │
-├── context/             # React Context
-│   └── AuthContext.tsx  # Auth state management
+├── context/                  # React Context
+│   └── AuthContext.tsx       # Auth state management
 │
-├── hooks/               # Custom hooks
-│   └── useTheme.ts      # Light/dark mode
+├── lib/                      # Utilities
+│   └── api.ts                # API client with token management
 │
-├── lib/                 # Utilities
-│   └── api.ts           # API client with token refresh
-│
-└── styles/              # Global CSS
-    └── globals.css      # Theme variables
+└── styles/                   # Global CSS
+    └── globals.css           # Tailwind directives & theme variables
 ```
 
 ## Features
 
-- **🧠 Brain Dump**: Freeform task input
-- **⚡ Energy Selector**: Low/Medium/High energy modes
-- **🎯 Task Cards**: Priority badges, time estimates, AI reasoning
-- **🌓 Theme Toggle**: Light/dark mode
-- **🔐 Authentication**: JWT with auto-refresh
-- **📱 Responsive**: Mobile-friendly design
+- **🚀 Multi-App Suite**: Extensible app architecture
+- **✨ Task Prioritizer**: AI-powered task organization
+  - **🧠 Brain Dump**: Freeform task input
+  - **⚡ Energy Context**: Prioritize based on user energy
+  - **📋 History Sidebar**: View and manage previous schedules
+- **🌓 Theme Support**: System-aware Dark/Light mode
+- **🔐 Authentication**: Laravel Sanctum integration
+- **📱 Responsive**: Mobile-first design with Tailwind CSS
 
 ## Theme System
 
-CSS variables in `globals.css` handle theming:
+Tailwind CSS v4 handles styling, with CSS variables defining the color palette in `globals.css` to support dynamic theming:
 
 ```css
 :root {
@@ -97,6 +100,8 @@ CSS variables in `globals.css` handle theming:
   /* ... */
 }
 ```
+
+Components consume these variables via Tailwind or inline styles.
 
 ## License
 
