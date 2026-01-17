@@ -181,6 +181,13 @@ class ApiClient {
       method: 'DELETE',
     });
   }
+
+  async adminUpdateUserStatus(userId: number, status: 'pending' | 'approved' | 'rejected') {
+    return this.request<{ user: AdminUser }>(`/admin/users/${userId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
 }
 
 // Types
@@ -208,6 +215,7 @@ export interface User {
   email: string;
   name: string;
   role: 'user' | 'admin';
+  status: 'pending' | 'approved' | 'rejected';
 }
 
 export interface AdminUser {
@@ -215,6 +223,7 @@ export interface AdminUser {
   name: string;
   email: string;
   role: 'user' | 'admin';
+  status: 'pending' | 'approved' | 'rejected';
   created_at: string;
 }
 

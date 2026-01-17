@@ -48,6 +48,7 @@ export default function AppsPage() {
   const router = useRouter();
   const [features, setFeatures] = useState<Feature[]>([]);
   const [isLoadingFeatures, setIsLoadingFeatures] = useState(true);
+  const [isPendingApproval, setIsPendingApproval] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -56,18 +57,27 @@ export default function AppsPage() {
   }, [isAuthenticated, authLoading, router]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchFeatures();
+    if (isAuthenticated && user) {
+      if (user.status === 'pending' || user.status === 'rejected') {
+        setIsPendingApproval(true);
+        setIsLoadingFeatures(false);
+      } else {
+        fetchFeatures();
+      }
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   const fetchFeatures = async () => {
     setIsLoadingFeatures(true);
     try {
       const data = await api.getUserFeatures();
       setFeatures(data.features);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Failed to fetch features:', err);
+      // If 403, user is pending approval
+      if (err instanceof Error && err.message.includes('pending')) {
+        setIsPendingApproval(true);
+      }
     } finally {
       setIsLoadingFeatures(false);
     }
@@ -83,6 +93,27 @@ export default function AppsPage() {
 
   if (!isAuthenticated) {
     return null;
+  }
+
+  if (isPendingApproval) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: 'var(--bg-primary)' }}>
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-6">⏳</div>
+          <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
+            {user?.status === 'rejected' ? 'Account Rejected' : 'Pending Approval'}
+          </h1>
+          <p className="text-lg mb-6" style={{ color: 'var(--text-secondary)' }}>
+            {user?.status === 'rejected' 
+              ? 'Your account has been rejected. Please contact the administrator for more information.'
+              : 'Your account is awaiting approval from an administrator. Please check back later.'}
+          </p>
+          <button onClick={logout} className="btn-primary">
+            Logout
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

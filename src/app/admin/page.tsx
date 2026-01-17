@@ -107,6 +107,20 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleUpdateUserStatus = async (userId: number, newStatus: 'pending' | 'approved' | 'rejected') => {
+    try {
+      await api.adminUpdateUserStatus(userId, newStatus);
+      setUsers(prev => prev.map(u => 
+        u.id === userId ? { ...u, status: newStatus } : u
+      ));
+      if (selectedUser?.id === userId) {
+        setSelectedUser({ ...selectedUser, status: newStatus });
+      }
+    } catch (err) {
+      console.error('Failed to update user status:', err);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
@@ -210,11 +224,22 @@ export default function AdminDashboard() {
                           <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{u.name}</p>
                           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{u.email}</p>
                         </div>
-                        <span 
-                          className={`text-xs px-2 py-1 rounded font-medium ${u.role === 'admin' ? 'bg-indigo-500 text-white' : 'bg-gray-400 text-white'}`}
-                        >
-                          {u.role}
-                        </span>
+                        <div className="flex gap-1">
+                          <span 
+                            className={`text-xs px-2 py-1 rounded font-medium ${
+                              u.status === 'pending' ? 'bg-yellow-500 text-white' : 
+                              u.status === 'approved' ? 'bg-green-500 text-white' : 
+                              'bg-red-500 text-white'
+                            }`}
+                          >
+                            {u.status}
+                          </span>
+                          <span 
+                            className={`text-xs px-2 py-1 rounded font-medium ${u.role === 'admin' ? 'bg-indigo-500 text-white' : 'bg-gray-400 text-white'}`}
+                          >
+                            {u.role}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -229,6 +254,31 @@ export default function AdminDashboard() {
               </h2>
               {selectedUser ? (
                 <>
+                  {/* Status */}
+                  <div className="mb-6">
+                    <h3 className="font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Account Status</h3>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleUpdateUserStatus(selectedUser.id, 'pending')}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all ${selectedUser.status === 'pending' ? 'bg-yellow-500 text-white' : 'btn-ghost'}`}
+                      >
+                        Pending
+                      </button>
+                      <button
+                        onClick={() => handleUpdateUserStatus(selectedUser.id, 'approved')}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all ${selectedUser.status === 'approved' ? 'bg-green-500 text-white' : 'btn-ghost'}`}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleUpdateUserStatus(selectedUser.id, 'rejected')}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all ${selectedUser.status === 'rejected' ? 'bg-red-500 text-white' : 'btn-ghost'}`}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Role */}
                   <div className="mb-6">
                     <h3 className="font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Role</h3>
