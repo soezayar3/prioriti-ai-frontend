@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import styles from './BrainDump.module.css';
 
 interface BrainDumpProps {
   value: string;
@@ -11,37 +10,25 @@ interface BrainDumpProps {
 
 export function BrainDump({ value, onChange, disabled }: BrainDumpProps) {
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>
-          <span className={styles.icon}>🧠</span>
-          Brain Dump
-        </h2>
-        <p className={styles.subtitle}>
-          Just dump everything on your mind. Don&apos;t worry about order or formatting!
-        </p>
+    <div className="rounded-xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-xl">🧠</span>
+        <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Brain Dump</h3>
       </div>
+      <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
+        Just dump everything on your mind. Don&apos;t worry about order or formatting!
+      </p>
       <textarea
-        className={styles.textarea}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Example:
-- Fix that login bug
-- Reply to Sarah's email
-- Buy groceries (milk, eggs, bread)
-- Research for the new project
-- Call mom
-- Finish the report by Friday
-- Schedule dentist appointment
-- Review pull requests..."
         disabled={disabled}
-        rows={8}
+        placeholder="Fix login bug, reply to client emails, buy groceries, prepare presentation for Monday..."
+        className="w-full h-32 resize-none"
+        style={{ background: 'var(--bg-input)' }}
       />
-      <div className={styles.footer}>
-        <span className={styles.hint}>
-          💡 Tip: Include deadlines, priorities, or any context you remember
-        </span>
-      </div>
+      <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
+        💡 Tip: Include deadlines, priorities, or any context you remember
+      </p>
     </div>
   );
 }

@@ -1,10 +1,9 @@
 'use client';
 
 import React from 'react';
-import styles from './Button.module.css';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   fullWidth?: boolean;
@@ -17,24 +16,34 @@ export function Button({
   isLoading = false,
   fullWidth = false,
   children,
-  disabled,
   className = '',
+  disabled,
   ...props
 }: ButtonProps) {
+  const baseClasses = 'inline-flex items-center justify-center font-semibold rounded-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed';
+  
+  const variantClasses = {
+    primary: 'btn-primary',
+    secondary: 'btn-secondary',
+    ghost: 'btn-ghost',
+  };
+
+  const sizeClasses = {
+    sm: 'px-3 py-1.5 text-sm',
+    md: 'px-5 py-2.5 text-base',
+    lg: 'px-6 py-3 text-lg',
+  };
+
   return (
     <button
-      className={`${styles.button} ${styles[variant]} ${styles[size]} ${fullWidth ? styles.fullWidth : ''} ${className}`}
+      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
       disabled={disabled || isLoading}
       {...props}
     >
       {isLoading ? (
-        <>
-          <span className={styles.spinner} />
-          <span>Loading...</span>
-        </>
-      ) : (
-        children
-      )}
+        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+      ) : null}
+      {children}
     </button>
   );
 }

@@ -4,13 +4,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/Button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { BrainDump } from '@/components/BrainDump';
 import { EnergySelector, EnergyLevel } from '@/components/EnergySelector';
 import { TaskCard } from '@/components/TaskCard';
 import api, { Schedule, Task } from '@/lib/api';
-import styles from './page.module.css';
 
 export default function TaskPrioritizerPage() {
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
@@ -70,7 +68,6 @@ export default function TaskPrioritizerPage() {
       setCurrentSchedule(result.schedule);
       setBrainDump('');
       setEnergyLevel('');
-      // Refresh history to include new schedule
       fetchHistory();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to prioritize tasks');
@@ -90,7 +87,6 @@ export default function TaskPrioritizerPage() {
           task.id === taskId ? { ...task, is_completed: isCompleted } : task
         ),
       });
-      // Update in history too
       setScheduleHistory(prev => prev.map(schedule => 
         schedule.id === currentSchedule.id
           ? {
@@ -141,8 +137,8 @@ export default function TaskPrioritizerPage() {
 
   if (authLoading) {
     return (
-      <div className={styles.loading}>
-        <div className={styles.spinner} />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+        <div className="w-10 h-10 border-4 border-gray-300 border-t-indigo-500 rounded-full animate-spin" />
       </div>
     );
   }
@@ -152,54 +148,46 @@ export default function TaskPrioritizerPage() {
   }
 
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerLeft}>
-          <Link href="/apps" className={styles.backLink}>
+    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+      {/* Header */}
+      <header className="flex items-center justify-between px-6 py-4 sticky top-0 z-50 border-b" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+        <div className="flex items-center gap-4">
+          <Link href="/apps" className="text-sm px-3 py-2 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800" style={{ color: 'var(--text-secondary)' }}>
             ← Apps
           </Link>
-          <h1 className={styles.logo}>✨ Task Prioritizer</h1>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--accent)' }}>✨ Task Prioritizer</h1>
         </div>
-        <div className={styles.headerRight}>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+        <div className="flex items-center gap-4">
+          <button
             onClick={() => setShowHistory(!showHistory)}
-            className={styles.historyButton}
+            className="btn-ghost text-sm"
           >
             📋 History ({scheduleHistory.length})
-          </Button>
+          </button>
           <ThemeToggle />
-          <div className={styles.userInfo}>
-            <span className={styles.userName}>{user?.name}</span>
-            <Button variant="ghost" size="sm" onClick={logout}>
-              Logout
-            </Button>
+          <div className="flex items-center gap-3">
+            <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{user?.name}</span>
+            <button onClick={logout} className="btn-ghost text-sm">Logout</button>
           </div>
         </div>
       </header>
 
-      <div className={styles.layout}>
+      <div className="flex relative">
         {/* History Sidebar */}
-        <aside className={`${styles.sidebar} ${showHistory ? styles.sidebarOpen : ''}`}>
-          <div className={styles.sidebarHeader}>
-            <h3>Task History</h3>
-            <button 
-              className={styles.closeSidebar} 
-              onClick={() => setShowHistory(false)}
-            >
-              ✕
-            </button>
+        <aside className={`fixed top-[65px] right-0 w-80 h-[calc(100vh-65px)] border-l overflow-y-auto transition-transform duration-300 z-40 ${showHistory ? 'translate-x-0' : 'translate-x-full'}`} style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+          <div className="flex justify-between items-center px-5 py-4 border-b sticky top-0" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+            <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Task History</h3>
+            <button onClick={() => setShowHistory(false)} className="text-lg opacity-60 hover:opacity-100" style={{ color: 'var(--text-secondary)' }}>✕</button>
           </div>
           
           {isLoadingHistory ? (
-            <div className={styles.sidebarLoading}>
-              <div className={styles.spinnerSmall} />
+            <div className="flex justify-center p-8">
+              <div className="w-6 h-6 border-2 border-gray-300 border-t-indigo-500 rounded-full animate-spin" />
             </div>
           ) : scheduleHistory.length === 0 ? (
-            <p className={styles.emptyHistory}>No previous schedules</p>
+            <p className="text-center p-8 text-sm" style={{ color: 'var(--text-secondary)' }}>No previous schedules</p>
           ) : (
-            <div className={styles.historyList}>
+            <div className="flex flex-col">
               {scheduleHistory.map((schedule) => {
                 const completedCount = schedule.tasks.filter(t => t.is_completed).length;
                 const totalCount = schedule.tasks.length;
@@ -207,37 +195,27 @@ export default function TaskPrioritizerPage() {
                 return (
                   <div
                     key={schedule.id}
-                    className={`${styles.historyItem} ${currentSchedule?.id === schedule.id ? styles.historyItemActive : ''}`}
+                    className={`px-5 py-4 border-b cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 ${currentSchedule?.id === schedule.id ? 'border-l-4 border-l-indigo-500 bg-gray-50 dark:bg-gray-800' : ''}`}
+                    style={{ borderColor: 'var(--border-color)' }}
                     onClick={() => handleSelectSchedule(schedule)}
                   >
-                    <div className={styles.historyItemHeader}>
-                      <span className={styles.historyDate}>
-                        {formatDate(schedule.created_at)}
-                      </span>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{formatDate(schedule.created_at)}</span>
                       <button
-                        className={styles.deleteButton}
+                        className="text-sm opacity-50 hover:opacity-100 p-1"
                         onClick={(e) => handleDeleteSchedule(schedule.id, e)}
                         title="Delete schedule"
                       >
                         🗑
                       </button>
                     </div>
-                    <div className={styles.historyMeta}>
-                      <span className={styles.energyBadge}>
-                        {schedule.energy_level}
-                      </span>
-                      <span className={styles.taskCount}>
-                        {completedCount}/{totalCount} done
-                      </span>
+                    <div className="flex gap-2 mb-2">
+                      <span className="text-xs font-semibold uppercase px-2 py-1 rounded" style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}>{schedule.energy_level}</span>
+                      <span className="text-xs" style={{ color: 'var(--accent)' }}>{completedCount}/{totalCount} done</span>
                     </div>
-                    <p className={styles.historyPreview}>
-                      {schedule.brain_dump.slice(0, 60)}...
-                    </p>
-                    <div className={styles.historyProgress}>
-                      <div 
-                        className={styles.historyProgressFill}
-                        style={{ width: `${(completedCount / totalCount) * 100}%` }}
-                      />
+                    <p className="text-xs truncate mb-2" style={{ color: 'var(--text-secondary)' }}>{schedule.brain_dump.slice(0, 60)}...</p>
+                    <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--bg-tertiary)' }}>
+                      <div className="h-full transition-all" style={{ width: `${(completedCount / totalCount) * 100}%`, background: 'var(--accent)' }} />
                     </div>
                   </div>
                 );
@@ -247,22 +225,18 @@ export default function TaskPrioritizerPage() {
         </aside>
 
         {/* Main Content */}
-        <main className={styles.main}>
+        <main className="flex-1 max-w-3xl mx-auto px-6 py-8">
           {currentSchedule ? (
-            <div className={styles.scheduleView}>
-              <div className={styles.scheduleHeader}>
+            <div className="animate-fade-in">
+              <div className="flex items-start justify-between gap-4 mb-8 flex-wrap">
                 <div>
-                  <h2 className={styles.scheduleTitle}>Your Prioritized Schedule</h2>
-                  <p className={styles.scheduleSubtitle}>
-                    {currentSchedule.tasks.length} tasks • {currentSchedule.energy_level} energy
-                  </p>
+                  <h2 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Your Prioritized Schedule</h2>
+                  <p className="text-sm capitalize" style={{ color: 'var(--text-secondary)' }}>{currentSchedule.tasks.length} tasks • {currentSchedule.energy_level} energy</p>
                 </div>
-                <Button variant="secondary" onClick={handleNewSchedule}>
-                  + New Schedule
-                </Button>
+                <button onClick={handleNewSchedule} className="btn-secondary">+ New Schedule</button>
               </div>
               
-              <div className={styles.taskList}>
+              <div className="flex flex-col gap-4 mb-8">
                 {currentSchedule.tasks.map((task: Task, index: number) => (
                   <TaskCard
                     key={task.id}
@@ -273,35 +247,34 @@ export default function TaskPrioritizerPage() {
                 ))}
               </div>
               
-              <div className={styles.progress}>
-                <div className={styles.progressInfo}>
+              <div className="card">
+                <div className="flex justify-between text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
                   <span>Progress</span>
-                  <span>
-                    {currentSchedule.tasks.filter((t: Task) => t.is_completed).length} / {currentSchedule.tasks.length} completed
-                  </span>
+                  <span>{currentSchedule.tasks.filter((t: Task) => t.is_completed).length} / {currentSchedule.tasks.length} completed</span>
                 </div>
-                <div className={styles.progressBar}>
+                <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-tertiary)' }}>
                   <div 
-                    className={styles.progressFill}
+                    className="h-full rounded-full transition-all duration-400"
                     style={{ 
-                      width: `${(currentSchedule.tasks.filter((t: Task) => t.is_completed).length / currentSchedule.tasks.length) * 100}%` 
+                      width: `${(currentSchedule.tasks.filter((t: Task) => t.is_completed).length / currentSchedule.tasks.length) * 100}%`,
+                      background: 'linear-gradient(90deg, var(--accent) 0%, #8b5cf6 100%)'
                     }}
                   />
                 </div>
               </div>
             </div>
           ) : (
-            <form onSubmit={handlePrioritize} className={styles.form}>
-              <div className={styles.formHeader}>
-                <h2 className={styles.formTitle}>
-                  What&apos;s on your mind?
-                </h2>
-                <p className={styles.formSubtitle}>
-                  Dump all your tasks below and let AI help you prioritize
-                </p>
+            <form onSubmit={handlePrioritize} className="flex flex-col gap-6 animate-fade-in">
+              <div className="text-center mb-4">
+                <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>What&apos;s on your mind?</h2>
+                <p style={{ color: 'var(--text-secondary)' }}>Dump all your tasks below and let AI help you prioritize</p>
               </div>
 
-              {error && <div className={styles.error}>{error}</div>}
+              {error && (
+                <div className="px-4 py-3 rounded-lg text-center text-sm" style={{ background: 'var(--danger-light)', color: 'var(--danger)' }}>
+                  {error}
+                </div>
+              )}
 
               <BrainDump 
                 value={brainDump} 
@@ -315,14 +288,20 @@ export default function TaskPrioritizerPage() {
                 disabled={isProcessing}
               />
               
-              <Button 
+              <button 
                 type="submit" 
-                size="lg" 
-                fullWidth 
-                isLoading={isProcessing}
+                disabled={isProcessing}
+                className="btn-primary w-full py-4 text-lg flex items-center justify-center gap-2"
               >
-                {isProcessing ? 'AI is analyzing your tasks...' : '🚀 Prioritize My Tasks'}
-              </Button>
+                {isProcessing ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    AI is analyzing your tasks...
+                  </>
+                ) : (
+                  '🚀 Prioritize My Tasks'
+                )}
+              </button>
             </form>
           )}
         </main>

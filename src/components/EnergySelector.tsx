@@ -1,9 +1,8 @@
 'use client';
 
 import React from 'react';
-import styles from './EnergySelector.module.css';
 
-type EnergyLevel = 'low' | 'medium' | 'high';
+export type EnergyLevel = 'low' | 'medium' | 'high';
 
 interface EnergySelectorProps {
   value: EnergyLevel | '';
@@ -11,56 +10,42 @@ interface EnergySelectorProps {
   disabled?: boolean;
 }
 
-const energyOptions = [
-  {
-    value: 'low' as const,
-    emoji: '🔋',
-    label: 'Low Energy',
-    description: 'Tired, need easy tasks',
-  },
-  {
-    value: 'medium' as const,
-    emoji: '⚡',
-    label: 'Medium Energy',
-    description: 'Balanced productivity',
-  },
-  {
-    value: 'high' as const,
-    emoji: '🚀',
-    label: 'High Energy',
-    description: 'Ready to tackle anything!',
-  },
+const energyOptions: { value: EnergyLevel; label: string; icon: string; description: string }[] = [
+  { value: 'low', label: 'Low Energy', icon: '🔋', description: 'Tired, need easy tasks' },
+  { value: 'medium', label: 'Medium Energy', icon: '⚡', description: 'Balanced productivity' },
+  { value: 'high', label: 'High Energy', icon: '🚀', description: 'Ready to tackle anything!' },
 ];
 
 export function EnergySelector({ value, onChange, disabled }: EnergySelectorProps) {
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>
-          <span className={styles.icon}>⚡</span>
-          Energy Level
-        </h2>
-        <p className={styles.subtitle}>
-          How are you feeling right now?
-        </p>
+    <div className="rounded-xl p-6" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-xl">⚡</span>
+        <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Energy Level</h3>
       </div>
-      <div className={styles.options}>
+      <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
+        How are you feeling right now?
+      </p>
+      <div className="grid grid-cols-3 gap-3">
         {energyOptions.map((option) => (
           <button
             key={option.value}
-            className={`${styles.option} ${value === option.value ? styles.selected : ''} ${styles[option.value]}`}
+            type="button"
             onClick={() => onChange(option.value)}
             disabled={disabled}
-            type="button"
+            className={`p-4 rounded-xl text-center transition-all ${value === option.value ? 'ring-2' : ''}`}
+            style={{
+              background: value === option.value ? 'var(--accent-light)' : 'var(--bg-tertiary)',
+              outline: value === option.value ? '2px solid var(--accent)' : 'none',
+              outlineOffset: '2px',
+            }}
           >
-            <span className={styles.emoji}>{option.emoji}</span>
-            <span className={styles.label}>{option.label}</span>
-            <span className={styles.description}>{option.description}</span>
+            <div className="text-2xl mb-2">{option.icon}</div>
+            <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{option.label}</div>
+            <div className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>{option.description}</div>
           </button>
         ))}
       </div>
     </div>
   );
 }
-
-export type { EnergyLevel };

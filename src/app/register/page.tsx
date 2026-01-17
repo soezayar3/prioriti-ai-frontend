@@ -1,12 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/Button';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
-import styles from '../login/page.module.css';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -15,8 +12,15 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+  
+  const { register, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.push('/apps');
+    }
+  }, [isAuthenticated, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,92 +40,108 @@ export default function RegisterPage() {
 
     try {
       await register(email, password, name);
-      router.push('/dashboard');
+      router.push('/apps');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to register');
+      setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
-    <div className={styles.container}>
-      <div className={styles.themeToggleWrapper}>
-        <ThemeToggle />
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+        <div className="w-10 h-10 border-4 border-gray-300 border-t-indigo-500 rounded-full animate-spin" />
       </div>
-      
-      <div className={styles.card}>
-        <div className={styles.header}>
-          <Link href="/" className={styles.logo}>
-            ✨ PrioritiAI
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--bg-primary)' }}>
+      <div className="w-full max-w-md p-8 rounded-2xl border" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+        <div className="text-center mb-8">
+          <Link href="/" className="text-3xl font-bold inline-block mb-2" style={{ color: 'var(--text-primary)' }}>
+            🚀 PrioritiAI
           </Link>
-          <h1 className={styles.title}>Create your account</h1>
-          <p className={styles.subtitle}>Start prioritizing your tasks with AI</p>
+          <p style={{ color: 'var(--text-secondary)' }}>Create your account to get started.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
-          {error && <div className={styles.error}>{error}</div>}
-          
-          <div className={styles.field}>
-            <label htmlFor="name" className={styles.label}>Name</label>
+        {error && (
+          <div className="mb-4 px-4 py-3 rounded-lg text-center text-sm" style={{ background: 'var(--danger-light)', color: 'var(--danger)' }}>
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Name</label>
             <input
-              id="name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
+              placeholder="John Doe"
               required
-              className={styles.input}
+              className="w-full"
             />
           </div>
 
-          <div className={styles.field}>
-            <label htmlFor="email" className={styles.label}>Email</label>
+          <div>
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Email</label>
             <input
-              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              className={styles.input}
+              className="w-full"
             />
           </div>
 
-          <div className={styles.field}>
-            <label htmlFor="password" className={styles.label}>Password</label>
+          <div>
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Password</label>
             <input
-              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              className={styles.input}
+              className="w-full"
             />
           </div>
 
-          <div className={styles.field}>
-            <label htmlFor="confirmPassword" className={styles.label}>Confirm Password</label>
+          <div>
+            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Confirm Password</label>
             <input
-              id="confirmPassword"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
               required
-              className={styles.input}
+              className="w-full"
             />
           </div>
 
-          <Button type="submit" fullWidth isLoading={isLoading}>
-            Create Account
-          </Button>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="btn-primary w-full py-3 mt-2 flex items-center justify-center gap-2"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Creating account...
+              </>
+            ) : (
+              'Create Account'
+            )}
+          </button>
         </form>
 
-        <p className={styles.footer}>
+        <p className="text-center mt-6" style={{ color: 'var(--text-secondary)' }}>
           Already have an account?{' '}
-          <Link href="/login" className={styles.link}>Sign in</Link>
+          <Link href="/login" style={{ color: 'var(--accent)' }} className="font-medium hover:underline">
+            Sign in
+          </Link>
         </p>
       </div>
     </div>
