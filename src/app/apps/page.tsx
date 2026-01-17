@@ -30,7 +30,7 @@ const appRegistry: Record<string, AppInfo> = {
     name: 'Daily Planner',
     description: 'AI-generated time-blocked daily schedules',
     icon: '📅',
-    route: '#',
+    route: '/apps/daily-planner',
     gradient: 'from-emerald-500 to-teal-600',
   },
   'meeting-summarizer': {

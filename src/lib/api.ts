@@ -142,6 +142,29 @@ class ApiClient {
     });
   }
 
+  // Daily Planner methods
+  async generateDailyPlan(tasks: string, startTime: string, endTime: string) {
+    return this.request<{ schedule: ScheduledBlock[] }>('/daily-plans/generate', {
+      method: 'POST',
+      body: JSON.stringify({ tasks, startTime, endTime }),
+    });
+  }
+
+  async saveDailyPlan(date: string, schedule: ScheduledBlock[], originalInput?: string) {
+    return this.request<{ plan: DailyPlan }>('/daily-plans', {
+      method: 'POST',
+      body: JSON.stringify({ date, schedule, original_input: originalInput }),
+    });
+  }
+
+  async getDailyPlan(date: string) {
+    return this.request<{ plan: DailyPlan | null }>(`/daily-plans/${date}`);
+  }
+
+  async getDailyPlans() {
+    return this.request<{ plans: DailyPlan[] }>('/daily-plans');
+  }
+
   // Admin methods
   async adminGetFeatures() {
     return this.request<{ features: Feature[] }>('/admin/features');
@@ -169,6 +192,13 @@ class ApiClient {
     });
   }
 
+  async adminUpdateUserStatus(userId: number, status: 'pending' | 'approved' | 'rejected') {
+    return this.request<{ user: AdminUser }>(`/admin/users/${userId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
+
   async adminToggleUserFeature(userId: number, featureId: number, isEnabled: boolean) {
     return this.request<{ message: string }>(`/admin/users/${userId}/features/${featureId}`, {
       method: 'PATCH',
@@ -179,13 +209,6 @@ class ApiClient {
   async adminRemoveUserFeatureOverride(userId: number, featureId: number) {
     return this.request<{ message: string }>(`/admin/users/${userId}/features/${featureId}`, {
       method: 'DELETE',
-    });
-  }
-
-  async adminUpdateUserStatus(userId: number, status: 'pending' | 'approved' | 'rejected') {
-    return this.request<{ user: AdminUser }>(`/admin/users/${userId}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status }),
     });
   }
 }
@@ -233,6 +256,21 @@ export interface Feature {
   name: string;
   description: string;
   is_enabled: boolean;
+}
+
+export interface ScheduledBlock {
+  time: string;
+  activity: string;
+  type: 'focus' | 'break' | 'meeting' | 'routine';
+}
+
+export interface DailyPlan {
+  id: number;
+  user_id: number;
+  date: string;
+  schedule: ScheduledBlock[];
+  original_input: string;
+  created_at: string;
 }
 
 // Singleton
