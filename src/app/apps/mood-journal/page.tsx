@@ -152,11 +152,11 @@ export default function MoodJournalPage() {
         <div className="mt-4 md:mt-8 pt-4 md:pt-6 border-t" style={{ borderColor: 'var(--border-color)' }}>
           <div className="flex items-center justify-between">
             <ThemeToggle />
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-bold">
                 {user?.name?.[0]}
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </aside>

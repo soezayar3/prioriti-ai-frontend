@@ -3,7 +3,7 @@ import '@/styles/globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 
 export const metadata: Metadata = {
-  title: 'PrioritiAI - Smart Task Prioritizer',
+  title: 'PrioritiAI - Your AI Productivity Suite',
   description: 'Transform your messy brain dump into a structured, prioritized schedule using AI',
   icons: {
     icon: '/images/favicon.png',

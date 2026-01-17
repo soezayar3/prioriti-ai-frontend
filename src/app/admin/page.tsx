@@ -5,19 +5,15 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
-import api, { Feature, AdminUser } from '@/lib/api';
+import api, { AdminUser } from '@/lib/api';
 
 export default function AdminDashboard() {
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const router = useRouter();
 
-  const [features, setFeatures] = useState<Feature[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
-  const [userFeatures, setUserFeatures] = useState<Feature[]>([]);
-  const [isLoadingFeatures, setIsLoadingFeatures] = useState(true);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
-  const [activeTab, setActiveTab] = useState<'features' | 'users'>('features');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -31,91 +27,41 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (isAuthenticated && user?.role === 'admin') {
-      fetchFeatures();
       fetchUsers();
     }
   }, [isAuthenticated, user]);
 
-  const fetchFeatures = async () => {
-    setIsLoadingFeatures(true);
-    try {
-      const data = await api.adminGetFeatures();
-      setFeatures(data.features);
-    } catch (err) {
-      console.error('Failed to fetch features:', err);
-    } finally {
-      setIsLoadingFeatures(false);
-    }
-  };
-
   const fetchUsers = async () => {
     setIsLoadingUsers(true);
+    setErrorMessage(null);
     try {
       const data = await api.adminGetUsers();
       setUsers(data.users);
     } catch (err) {
       console.error('Failed to fetch users:', err);
+      setErrorMessage('Failed to fetch users. Make sure admin RLS policies are configured.');
     } finally {
       setIsLoadingUsers(false);
     }
   };
 
-  const handleToggleFeature = async (featureId: number, currentStatus: boolean) => {
-    try {
-      await api.adminToggleFeature(featureId, !currentStatus);
-      setFeatures(prev => prev.map(f => 
-        f.id === featureId ? { ...f, is_enabled: !currentStatus } : f
-      ));
-    } catch (err) {
-      console.error('Failed to toggle feature:', err);
-    }
-  };
-
-  const handleSelectUser = async (userId: number) => {
-    try {
-      const data = await api.adminGetUser(userId);
-      setSelectedUser(data.user);
-      setUserFeatures(data.features);
-    } catch (err) {
-      console.error('Failed to fetch user:', err);
-    }
-  };
-
-  const handleToggleUserFeature = async (featureId: number, currentStatus: boolean) => {
-    if (!selectedUser) return;
-    try {
-      await api.adminToggleUserFeature(selectedUser.id, featureId, !currentStatus);
-      setUserFeatures(prev => prev.map(f => 
-        f.id === featureId ? { ...f, is_enabled: !currentStatus } : f
-      ));
-    } catch (err) {
-      console.error('Failed to toggle user feature:', err);
-    }
-  };
-
-  const handleUpdateUserRole = async (userId: number, newRole: 'user' | 'admin') => {
+  const handleUpdateUserRole = async (userId: string, newRole: 'user' | 'admin') => {
     try {
       await api.adminUpdateUserRole(userId, newRole);
       setUsers(prev => prev.map(u => 
         u.id === userId ? { ...u, role: newRole } : u
       ));
-      if (selectedUser?.id === userId) {
-        setSelectedUser({ ...selectedUser, role: newRole });
-      }
     } catch (err) {
       console.error('Failed to update user role:', err);
     }
   };
 
-  const handleUpdateUserStatus = async (userId: number, newStatus: 'pending' | 'approved' | 'rejected') => {
+  const handleUpdateUserStatus = async (userId: string, newStatus: 'pending' | 'approved' | 'rejected') => {
     try {
       await api.adminUpdateUserStatus(userId, newStatus);
       setUsers(prev => prev.map(u => 
         u.id === userId ? { ...u, status: newStatus } : u
       ));
-      if (selectedUser?.id === userId) {
-        setSelectedUser({ ...selectedUser, status: newStatus });
-      }
     } catch (err) {
       console.error('Failed to update user status:', err);
     }
@@ -133,6 +79,12 @@ export default function AdminDashboard() {
     return null;
   }
 
+  // Filter out admin users from management list
+  const manageableUsers = users.filter(u => u.role !== 'admin');
+  const pendingUsers = manageableUsers.filter(u => u.status === 'pending');
+  const approvedUsers = manageableUsers.filter(u => u.status === 'approved');
+  const rejectedUsers = manageableUsers.filter(u => u.status === 'rejected');
+
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       {/* Header */}
@@ -141,188 +93,166 @@ export default function AdminDashboard() {
           <Link href="/apps" className="text-sm px-2 md:px-3 py-2 rounded-lg transition-colors" style={{ color: 'var(--text-secondary)' }}>
             ←<span className="hidden sm:inline"> Apps</span>
           </Link>
-          <h1 className="text-base sm:text-xl font-bold" style={{ color: 'var(--accent)' }}>🔧 <span className="hidden xs:inline">Admin </span>Dashboard</h1>
+          <h1 className="text-base sm:text-xl font-bold" style={{ color: 'var(--accent)' }}>🔧 Admin Dashboard</h1>
         </div>
         <div className="flex items-center gap-2 md:gap-4">
           <ThemeToggle />
-          <div className="flex items-center gap-2 md:gap-3">
-            <span className="hidden sm:inline text-sm px-2 py-1 rounded font-medium" style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}>Admin</span>
-            <span className="hidden md:inline text-sm" style={{ color: 'var(--text-secondary)' }}>{user?.name}</span>
-            <button onClick={logout} className="btn-ghost text-sm">Logout</button>
-          </div>
+          <span className="hidden sm:inline text-sm px-2 py-1 rounded font-medium" style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}>Admin</span>
+          <button onClick={logout} className="btn-ghost text-sm">Logout</button>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8">
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6 md:mb-8 overflow-x-auto">
-          <button
-            onClick={() => setActiveTab('features')}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${activeTab === 'features' ? 'btn-primary' : 'btn-ghost'}`}
-          >
-            Features
-          </button>
-          <button
-            onClick={() => setActiveTab('users')}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${activeTab === 'users' ? 'btn-primary' : 'btn-ghost'}`}
-          >
-            Users
-          </button>
+      {/* Main Content */}
+      <main className="max-w-6xl mx-auto px-4 md:px-6 py-8">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>User Management</h2>
+          <p style={{ color: 'var(--text-secondary)' }}>Approve or reject user registrations</p>
         </div>
 
-        {/* Features Tab */}
-        {activeTab === 'features' && (
-          <div className="card">
-            <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Global Feature Toggles</h2>
-            {isLoadingFeatures ? (
-              <div className="flex justify-center py-8">
-                <div className="w-8 h-8 border-3 border-gray-300 border-t-indigo-500 rounded-full animate-spin" />
-              </div>
-            ) : (
-              <div className="flex flex-col gap-4">
-                {features.map((feature) => (
-                  <div key={feature.id} className="flex items-center justify-between p-4 rounded-lg" style={{ background: 'var(--bg-tertiary)' }}>
-                    <div>
-                      <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>{feature.name}</h3>
-                      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{feature.description}</p>
-                      <code className="text-xs mt-1 inline-block px-2 py-0.5 rounded" style={{ background: 'var(--bg-primary)', color: 'var(--text-muted)' }}>{feature.slug}</code>
-                    </div>
-                    <button
-                      onClick={() => handleToggleFeature(feature.id, feature.is_enabled)}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all ${feature.is_enabled ? 'bg-green-500 text-white' : 'bg-gray-400 text-white'}`}
-                    >
-                      {feature.is_enabled ? 'Enabled' : 'Disabled'}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+        {errorMessage && (
+          <div className="mb-6 p-4 rounded-lg bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+            {errorMessage}
           </div>
         )}
 
-        {/* Users Tab */}
-        {activeTab === 'users' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Users List */}
-            <div className="card">
-              <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Users</h2>
-              {isLoadingUsers ? (
-                <div className="flex justify-center py-8">
-                  <div className="w-8 h-8 border-3 border-gray-300 border-t-indigo-500 rounded-full animate-spin" />
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {users.map((u) => (
-                    <div
-                      key={u.id}
-                      onClick={() => handleSelectUser(u.id)}
-                      className={`p-4 rounded-lg cursor-pointer transition-all ${selectedUser?.id === u.id ? 'ring-2 ring-indigo-500' : ''}`}
-                      style={{ background: 'var(--bg-tertiary)' }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{u.name}</p>
-                          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{u.email}</p>
-                        </div>
-                        <div className="flex gap-1">
-                          <span 
-                            className={`text-xs px-2 py-1 rounded font-medium ${
-                              u.status === 'pending' ? 'bg-yellow-500 text-white' : 
-                              u.status === 'approved' ? 'bg-green-500 text-white' : 
-                              'bg-red-500 text-white'
-                            }`}
-                          >
-                            {u.status}
-                          </span>
-                          <span 
-                            className={`text-xs px-2 py-1 rounded font-medium ${u.role === 'admin' ? 'bg-indigo-500 text-white' : 'bg-gray-400 text-white'}`}
-                          >
-                            {u.role}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="card p-4 text-center">
+            <div className="text-3xl font-bold" style={{ color: 'var(--warning)' }}>{pendingUsers.length}</div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Pending</div>
+          </div>
+          <div className="card p-4 text-center">
+            <div className="text-3xl font-bold" style={{ color: 'var(--success)' }}>{approvedUsers.length}</div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Approved</div>
+          </div>
+          <div className="card p-4 text-center">
+            <div className="text-3xl font-bold" style={{ color: 'var(--error)' }}>{rejectedUsers.length}</div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Rejected</div>
+          </div>
+        </div>
 
-            {/* User Details */}
-            <div className="card">
-              <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>
-                {selectedUser ? `${selectedUser.name}'s Settings` : 'Select a User'}
-              </h2>
-              {selectedUser ? (
-                <>
-                  {/* Status */}
-                  <div className="mb-6">
-                    <h3 className="font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Account Status</h3>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleUpdateUserStatus(selectedUser.id, 'pending')}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${selectedUser.status === 'pending' ? 'bg-yellow-500 text-white' : 'btn-ghost'}`}
-                      >
-                        Pending
-                      </button>
-                      <button
-                        onClick={() => handleUpdateUserStatus(selectedUser.id, 'approved')}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${selectedUser.status === 'approved' ? 'bg-green-500 text-white' : 'btn-ghost'}`}
-                      >
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => handleUpdateUserStatus(selectedUser.id, 'rejected')}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${selectedUser.status === 'rejected' ? 'bg-red-500 text-white' : 'btn-ghost'}`}
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Role */}
-                  <div className="mb-6">
-                    <h3 className="font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Role</h3>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleUpdateUserRole(selectedUser.id, 'user')}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${selectedUser.role === 'user' ? 'bg-indigo-500 text-white' : 'btn-ghost'}`}
-                      >
-                        User
-                      </button>
-                      <button
-                        onClick={() => handleUpdateUserRole(selectedUser.id, 'admin')}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${selectedUser.role === 'admin' ? 'bg-indigo-500 text-white' : 'btn-ghost'}`}
-                      >
-                        Admin
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Feature Overrides */}
-                  <div>
-                    <h3 className="font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Feature Access</h3>
-                    <div className="flex flex-col gap-2">
-                      {userFeatures.map((feature) => (
-                        <div key={feature.id} className="flex items-center justify-between p-3 rounded-lg" style={{ background: 'var(--bg-tertiary)' }}>
-                          <span style={{ color: 'var(--text-primary)' }}>{feature.name}</span>
-                          <button
-                            onClick={() => handleToggleUserFeature(feature.id, feature.is_enabled)}
-                            className={`px-3 py-1 rounded text-sm font-medium transition-all ${feature.is_enabled ? 'bg-green-500 text-white' : 'bg-gray-400 text-white'}`}
-                          >
-                            {feature.is_enabled ? 'On' : 'Off'}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <p style={{ color: 'var(--text-muted)' }}>Click on a user to manage their settings</p>
-              )}
+        {/* Pending Users Section */}
+        {pendingUsers.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+              ⏳ Pending Approval ({pendingUsers.length})
+            </h3>
+            <div className="space-y-3">
+              {pendingUsers.map(u => (
+                <UserCard 
+                  key={u.id} 
+                  user={u} 
+                  onUpdateStatus={handleUpdateUserStatus}
+                  onUpdateRole={handleUpdateUserRole}
+                />
+              ))}
             </div>
           </div>
         )}
+
+        {/* All Users */}
+        <div>
+          <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+            👥 All Users ({manageableUsers.length})
+          </h3>
+          {isLoadingUsers ? (
+            <div className="flex justify-center py-8">
+              <div className="w-8 h-8 border-4 border-gray-300 border-t-indigo-500 rounded-full animate-spin" />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {manageableUsers.map(u => (
+                <UserCard 
+                  key={u.id} 
+                  user={u} 
+                  onUpdateStatus={handleUpdateUserStatus}
+                  onUpdateRole={handleUpdateUserRole}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </main>
+    </div>
+  );
+}
+
+// User Card Component
+function UserCard({ 
+  user, 
+  onUpdateStatus, 
+  onUpdateRole 
+}: { 
+  user: AdminUser;
+  onUpdateStatus: (id: string, status: 'pending' | 'approved' | 'rejected') => void;
+  onUpdateRole: (id: string, role: 'user' | 'admin') => void;
+}) {
+  const statusColors = {
+    pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+    approved: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    rejected: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  };
+
+  return (
+    <div className="card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{user.name || 'No name'}</span>
+          {user.role === 'admin' && (
+            <span className="text-xs px-2 py-0.5 rounded" style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}>Admin</span>
+          )}
+          <span className={`text-xs px-2 py-0.5 rounded ${statusColors[user.status]}`}>
+            {user.status}
+          </span>
+        </div>
+        <div className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+          ID: {user.id.slice(0, 8)}... • Joined: {new Date(user.created_at).toLocaleDateString()}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 flex-wrap">
+        {user.status === 'pending' && (
+          <>
+            <button 
+              onClick={() => onUpdateStatus(user.id, 'approved')}
+              className="btn-primary text-sm py-1.5 px-3"
+            >
+              ✓ Approve
+            </button>
+            <button 
+              onClick={() => onUpdateStatus(user.id, 'rejected')}
+              className="btn-ghost text-sm py-1.5 px-3 text-red-500"
+            >
+              ✗ Reject
+            </button>
+          </>
+        )}
+        {user.status === 'approved' && (
+          <button 
+            onClick={() => onUpdateStatus(user.id, 'rejected')}
+            className="btn-ghost text-sm py-1.5 px-3"
+          >
+            Revoke
+          </button>
+        )}
+        {user.status === 'rejected' && (
+          <button 
+            onClick={() => onUpdateStatus(user.id, 'approved')}
+            className="btn-ghost text-sm py-1.5 px-3"
+          >
+            Approve
+          </button>
+        )}
+        <select
+          value={user.role}
+          onChange={(e) => onUpdateRole(user.id, e.target.value as 'user' | 'admin')}
+          className="text-sm px-2 py-1.5 rounded border"
+          style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
+        >
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
     </div>
   );
 }

@@ -138,7 +138,7 @@ export default function DailyPlannerPage() {
             )}
           </button>
         </div>
-
+{/* 
         <div className="mt-4 md:mt-8 pt-4 md:pt-6 border-t" style={{ borderColor: 'var(--border-color)' }}>
           <div className="flex items-center justify-between">
             <ThemeToggle />
@@ -149,7 +149,7 @@ export default function DailyPlannerPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </aside>
 
       {/* Main Content - Timeline */}
