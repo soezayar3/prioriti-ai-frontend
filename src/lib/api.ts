@@ -165,6 +165,27 @@ class ApiClient {
     return this.request<{ plans: DailyPlan[] }>('/daily-plans');
   }
 
+  // Journal methods
+  async getJournalEntries(page = 1) {
+    return this.request<{ data: JournalEntry[]; current_page: number; last_page: number }>(`/journal?page=${page}`);
+  }
+
+  async createJournalEntry(content: string) {
+    return this.request<{ entry: JournalEntry; analysis: { summary: string } | null }>('/journal', {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+  }
+
+  async getJournalInsights(month?: string) {
+    const query = month ? `?month=${month}` : '';
+    return this.request<JournalInsights>(`/journal/insights${query}`);
+  }
+
+  async deleteJournalEntry(id: number) {
+    return this.request<{ message: string }>(`/journal/${id}`, { method: 'DELETE' });
+  }
+
   // Admin methods
   async adminGetFeatures() {
     return this.request<{ features: Feature[] }>('/admin/features');
@@ -271,6 +292,32 @@ export interface DailyPlan {
   schedule: ScheduledBlock[];
   original_input: string;
   created_at: string;
+}
+
+export interface JournalEntry {
+  id: number;
+  user_id: number;
+  content: string;
+  mood_score: number | null;
+  mood_label: string | null;
+  entities: {
+    activities: string[];
+    people: string[];
+    places: string[];
+  } | null;
+  created_at: string;
+}
+
+export interface JournalInsights {
+  month: string;
+  entry_count: number;
+  insights: {
+    average_mood: number;
+    mood_distribution: Record<string, number>;
+    top_activities: Record<string, number>;
+    top_people: Record<string, number>;
+    top_places: Record<string, number>;
+  } | null;
 }
 
 // Singleton

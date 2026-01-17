@@ -41,6 +41,14 @@ const appRegistry: Record<string, AppInfo> = {
     route: '#',
     gradient: 'from-pink-400 to-rose-500',
   },
+  'mood-journal': {
+    slug: 'mood-journal',
+    name: 'Mood Journal',
+    description: 'AI-powered micro-journaling with mood tracking',
+    icon: '🌈',
+    route: '/apps/mood-journal',
+    gradient: 'from-amber-400 to-orange-500',
+  },
 };
 
 export default function AppsPage() {
