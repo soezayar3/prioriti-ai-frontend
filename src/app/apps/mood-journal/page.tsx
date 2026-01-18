@@ -1,53 +1,60 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
-import { Toast } from '@/components/ui/Toast';
-import api, { JournalEntry } from '@/lib/api';
+import React, { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { Toast } from "@/components/ui/Toast";
+import api, { JournalEntry } from "@/lib/api";
 
 const moodColors: Record<string, string> = {
-  happy: 'bg-yellow-400',
-  excited: 'bg-orange-400',
-  proud: 'bg-purple-400',
-  calm: 'bg-blue-400',
-  neutral: 'bg-gray-400',
-  tired: 'bg-slate-500',
-  anxious: 'bg-amber-500',
-  stressed: 'bg-red-400',
-  frustrated: 'bg-red-500',
-  sad: 'bg-blue-600',
+  happy: "bg-yellow-400",
+  excited: "bg-orange-400",
+  proud: "bg-purple-400",
+  calm: "bg-blue-400",
+  neutral: "bg-gray-400",
+  tired: "bg-slate-500",
+  anxious: "bg-amber-500",
+  stressed: "bg-red-400",
+  frustrated: "bg-red-500",
+  sad: "bg-blue-600",
 };
 
 const moodEmojis: Record<string, string> = {
-  happy: '😊',
-  excited: '🎉',
-  proud: '💪',
-  calm: '😌',
-  neutral: '😐',
-  tired: '😴',
-  anxious: '😰',
-  stressed: '😫',
-  frustrated: '😤',
-  sad: '😢',
+  happy: "😊",
+  excited: "🎉",
+  proud: "💪",
+  calm: "😌",
+  neutral: "😐",
+  tired: "😴",
+  anxious: "😰",
+  stressed: "😫",
+  frustrated: "😤",
+  sad: "😢",
 };
 
 export default function MoodJournalPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState("");
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' | 'info' }>({
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: "success" | "error" | "info";
+  }>({
     show: false,
-    message: '',
-    type: 'info',
+    message: "",
+    type: "info",
   });
 
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "info" = "success",
+  ) => {
     setToast({ show: true, message, type });
   };
 
@@ -56,7 +63,7 @@ export default function MoodJournalPage() {
       const data = await api.getJournalEntries();
       setEntries(data.data);
     } catch (err) {
-      console.error('Failed to load entries:', err);
+      console.error("Failed to load entries:", err);
     } finally {
       setIsLoading(false);
     }
@@ -64,7 +71,7 @@ export default function MoodJournalPage() {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.push('/login');
+      router.push("/login");
     }
   }, [isAuthenticated, authLoading, router]);
 
@@ -82,46 +89,62 @@ export default function MoodJournalPage() {
     try {
       const result = await api.createJournalEntry(content);
       setEntries([result.entry, ...entries]);
-      setContent('');
-      showToast(
-        result.analysis?.summary || 'Entry saved!',
-        'success'
-      );
+      setContent("");
+      showToast(result.analysis?.summary || "Entry saved!", "success");
     } catch (err) {
-      console.error('Failed to save entry:', err);
-      showToast('Failed to save entry', 'error');
+      console.error("Failed to save entry:", err);
+      showToast("Failed to save entry", "error");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     try {
       await api.deleteJournalEntry(id);
       setEntries(entries.filter((e) => e.id !== id));
-      showToast('Entry deleted', 'info');
+      showToast("Entry deleted", "info");
     } catch (err) {
-      console.error('Failed to delete entry:', err);
+      console.error("Failed to delete entry:", err);
     }
   };
 
   if (authLoading) return null;
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row" style={{ background: 'var(--bg-primary)' }}>
+    <div
+      className="min-h-screen flex flex-col md:flex-row"
+      style={{ background: "var(--bg-primary)" }}
+    >
       {/* Sidebar - Entry Form */}
-      <aside className="w-full md:w-96 p-4 md:p-6 border-b md:border-b-0 md:border-r flex flex-col md:h-screen md:sticky md:top-0" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
+      <aside
+        className="w-full md:w-96 p-4 md:p-6 border-b md:border-b-0 md:border-r flex flex-col md:h-screen md:sticky md:top-0"
+        style={{
+          background: "var(--bg-secondary)",
+          borderColor: "var(--border-color)",
+        }}
+      >
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
-            <button onClick={() => router.push('/apps')} className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity">
+            <button
+              onClick={() => router.push("/apps")}
+              className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity"
+            >
               <span>←</span> Back
             </button>
-            <button onClick={() => router.push('/apps/mood-journal/insights')} className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity text-sm">
+            <button
+              onClick={() => router.push("/apps/mood-journal/insights")}
+              className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity text-sm"
+            >
               📊 Insights
             </button>
           </div>
-          <h1 className="text-xl md:text-2xl font-bold mb-2 icon-gradient">🌈 Mood Journal</h1>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Write 1-2 sentences about your day.</p>
+          <h1 className="text-xl md:text-2xl font-bold mb-2 icon-gradient">
+            🌈 Mood Journal
+          </h1>
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+            Write 1-2 sentences about your day.
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -130,7 +153,10 @@ export default function MoodJournalPage() {
             onChange={(e) => setContent(e.target.value)}
             placeholder="Had a long day but finally fixed that bug. Feeling tired but proud."
             className="w-full h-24 md:h-32 rounded-xl p-4 resize-none transition-all focus:ring-2 focus:ring-amber-500 outline-none"
-            style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)' }}
+            style={{
+              background: "var(--bg-primary)",
+              border: "1px solid var(--border-color)",
+            }}
             maxLength={1000}
           />
           <button
@@ -144,12 +170,15 @@ export default function MoodJournalPage() {
                 Analyzing...
               </>
             ) : (
-              '✨ Save Entry'
+              "✨ Save Entry"
             )}
           </button>
         </form>
 
-        <div className="mt-4 md:mt-8 pt-4 md:pt-6 border-t" style={{ borderColor: 'var(--border-color)' }}>
+        <div
+          className="mt-4 md:mt-8 pt-4 md:pt-6 border-t"
+          style={{ borderColor: "var(--border-color)" }}
+        >
           <div className="flex items-center justify-between">
             <ThemeToggle />
             {/* <div className="flex items-center gap-2">
@@ -181,28 +210,42 @@ export default function MoodJournalPage() {
                 <div
                   key={entry.id}
                   className="p-4 rounded-xl border transition-all hover:shadow-md"
-                  style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
+                  style={{
+                    background: "var(--bg-secondary)",
+                    borderColor: "var(--border-color)",
+                  }}
                 >
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div className="flex items-center gap-3">
                       {entry.mood_label && (
-                        <div className={`w-10 h-10 rounded-full ${moodColors[entry.mood_label] || 'bg-gray-400'} flex items-center justify-center text-xl`}>
-                          {moodEmojis[entry.mood_label] || '😐'}
+                        <div
+                          className={`w-10 h-10 rounded-full ${moodColors[entry.mood_label] || "bg-gray-400"} flex items-center justify-center text-xl`}
+                        >
+                          {moodEmojis[entry.mood_label] || "😐"}
                         </div>
                       )}
                       <div>
-                        <span className="text-sm font-medium capitalize" style={{ color: 'var(--text-primary)' }}>
-                          {entry.mood_label || 'Unknown'}
+                        <span
+                          className="text-sm font-medium capitalize"
+                          style={{ color: "var(--text-primary)" }}
+                        >
+                          {entry.mood_label || "Unknown"}
                         </span>
                         {entry.mood_score !== null && (
-                          <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                          <div
+                            className="text-xs"
+                            style={{ color: "var(--text-secondary)" }}
+                          >
                             Score: {(entry.mood_score * 100).toFixed(0)}%
                           </div>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                      <span
+                        className="text-xs"
+                        style={{ color: "var(--text-secondary)" }}
+                      >
                         {new Date(entry.created_at).toLocaleDateString()}
                       </span>
                       <button
@@ -214,22 +257,32 @@ export default function MoodJournalPage() {
                     </div>
                   </div>
 
-                  <p className="mb-3" style={{ color: 'var(--text-primary)' }}>{entry.content}</p>
+                  <p className="mb-3" style={{ color: "var(--text-primary)" }}>
+                    {entry.content}
+                  </p>
 
-                  {entry.entities && (entry.entities.activities?.length > 0 || entry.entities.people?.length > 0) && (
-                    <div className="flex flex-wrap gap-2">
-                      {entry.entities.activities?.map((activity, i) => (
-                        <span key={i} className="text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-600">
-                          {activity}
-                        </span>
-                      ))}
-                      {entry.entities.people?.map((person, i) => (
-                        <span key={i} className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-600">
-                          {person}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  {entry.entities &&
+                    (entry.entities.activities?.length > 0 ||
+                      entry.entities.people?.length > 0) && (
+                      <div className="flex flex-wrap gap-2">
+                        {entry.entities.activities?.map((activity, i) => (
+                          <span
+                            key={i}
+                            className="text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-600"
+                          >
+                            {activity}
+                          </span>
+                        ))}
+                        {entry.entities.people?.map((person, i) => (
+                          <span
+                            key={i}
+                            className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-600"
+                          >
+                            {person}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                 </div>
               ))}
             </div>

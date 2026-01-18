@@ -77,7 +77,7 @@ export default function TaskPrioritizerPage() {
   };
 
   const handleToggleComplete = async (taskId: string, isCompleted: boolean) => {
-    if (!currentSchedule) return;
+    if (!currentSchedule || !currentSchedule.tasks) return;
 
     try {
       await api.updateTask(taskId, { isCompleted });
@@ -91,7 +91,7 @@ export default function TaskPrioritizerPage() {
         schedule.id === currentSchedule.id
           ? {
               ...schedule,
-              tasks: schedule.tasks.map(task =>
+              tasks: (schedule.tasks || []).map(task =>
                 task.id === taskId ? { ...task, is_completed: isCompleted } : task
               ),
             }
@@ -189,8 +189,8 @@ export default function TaskPrioritizerPage() {
           ) : (
             <div className="flex flex-col">
               {scheduleHistory.map((schedule) => {
-                const completedCount = schedule.tasks.filter(t => t.is_completed).length;
-                const totalCount = schedule.tasks.length;
+                const completedCount = (schedule.tasks || []).filter(t => t.is_completed).length;
+                const totalCount = (schedule.tasks || []).length;
                 
                 return (
                   <div
@@ -231,13 +231,13 @@ export default function TaskPrioritizerPage() {
               <div className="flex items-start justify-between gap-4 mb-8 flex-wrap">
                 <div>
                   <h2 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Your Prioritized Schedule</h2>
-                  <p className="text-sm capitalize" style={{ color: 'var(--text-secondary)' }}>{currentSchedule.tasks.length} tasks • {currentSchedule.energy_level} energy</p>
+                  <p className="text-sm capitalize" style={{ color: 'var(--text-secondary)' }}>{(currentSchedule.tasks || []).length} tasks • {currentSchedule.energy_level} energy</p>
                 </div>
                 <button onClick={handleNewSchedule} className="btn-secondary">+ New Schedule</button>
               </div>
               
               <div className="flex flex-col gap-4 mb-8">
-                {currentSchedule.tasks.map((task: Task, index: number) => (
+                {(currentSchedule.tasks || []).map((task: Task, index: number) => (
                   <TaskCard
                     key={task.id}
                     task={task}
@@ -250,13 +250,13 @@ export default function TaskPrioritizerPage() {
               <div className="card">
                 <div className="flex justify-between text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
                   <span>Progress</span>
-                  <span>{currentSchedule.tasks.filter((t: Task) => t.is_completed).length} / {currentSchedule.tasks.length} completed</span>
+                  <span>{(currentSchedule.tasks || []).filter((t: Task) => t.is_completed).length} / {(currentSchedule.tasks || []).length} completed</span>
                 </div>
                 <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-tertiary)' }}>
                   <div 
                     className="h-full rounded-full transition-all duration-400"
                     style={{ 
-                      width: `${(currentSchedule.tasks.filter((t: Task) => t.is_completed).length / currentSchedule.tasks.length) * 100}%`,
+                      width: `${((currentSchedule.tasks || []).filter((t: Task) => t.is_completed).length / Math.max((currentSchedule.tasks || []).length, 1)) * 100}%`,
                       background: 'linear-gradient(90deg, var(--accent) 0%, #8b5cf6 100%)'
                     }}
                   />
