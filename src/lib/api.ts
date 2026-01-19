@@ -15,6 +15,26 @@ export interface JournalInsights {
   } | null;
 }
 
+// Helper to parse AI errors into user-friendly messages
+function parseAIError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  
+  if (message.includes('Too Many Requests') || message.includes('429')) {
+    return 'AI service is temporarily busy. Please wait a minute and try again.';
+  }
+  if (message.includes('GEMINI_API_KEY not configured')) {
+    return 'AI service is not configured. Please contact support.';
+  }
+  if (message.includes('No JSON found')) {
+    return 'AI returned an unexpected response. Please try again.';
+  }
+  if (message.includes('Not authenticated')) {
+    return 'Please log in to use this feature.';
+  }
+  
+  return message || 'An unexpected error occurred. Please try again.';
+}
+
 class SupabaseApi {
   // Get current user ID
   private async getUserId(): Promise<string> {
@@ -33,7 +53,28 @@ class SupabaseApi {
       body: { brainDump, energyLevel },
     });
 
-    if (aiError) throw new Error(aiError.message);
+    // Handle errors - when Edge Function returns 500, aiData is null and error is in aiError.context
+    if (aiError) {
+      let errorMessage = aiError.message;
+      
+      // Try to get the actual error from the response body
+      if ('context' in aiError && aiError.context instanceof Response) {
+        try {
+          const errorBody = await aiError.context.json();
+          if (errorBody?.error) {
+            errorMessage = errorBody.error;
+          }
+        } catch {
+          // Ignore parse errors
+        }
+      }
+      
+      throw new Error(parseAIError(new Error(errorMessage)));
+    }
+    
+    if (!aiData?.schedule) {
+      throw new Error('AI service returned an invalid response. Please try again.');
+    }
 
     // Save schedule to database
     const { data: scheduleData, error: scheduleError } = await supabase
@@ -123,7 +164,27 @@ class SupabaseApi {
       body: { tasks, startTime, endTime },
     });
 
-    if (error) throw new Error(error.message);
+    // Handle errors - when Edge Function returns 500, data is null and error is in error.context
+    if (error) {
+      let errorMessage = error.message;
+      
+      if ('context' in error && error.context instanceof Response) {
+        try {
+          const errorBody = await error.context.json();
+          if (errorBody?.error) {
+            errorMessage = errorBody.error;
+          }
+        } catch {
+          // Ignore parse errors
+        }
+      }
+      
+      throw new Error(parseAIError(new Error(errorMessage)));
+    }
+    
+    if (!data?.schedule) {
+      throw new Error('AI service returned an invalid response. Please try again.');
+    }
     return { schedule: data.schedule };
   }
 
@@ -186,11 +247,28 @@ class SupabaseApi {
         body: { content },
       });
 
-      if (!aiError) {
-        analysis = aiData;
+      // Handle errors - when Edge Function returns 500, aiData is null and error is in aiError.context
+      if (aiError) {
+        let errorMessage = aiError.message;
+        
+        if ('context' in aiError && aiError.context instanceof Response) {
+          try {
+            const errorBody = await aiError.context.json();
+            if (errorBody?.error) {
+              errorMessage = errorBody.error;
+            }
+          } catch {
+            // Ignore parse errors
+          }
+        }
+        
+        throw new Error(parseAIError(new Error(errorMessage)));
       }
-    } catch {
-      console.warn('AI analysis failed, saving without mood data');
+      
+      analysis = aiData;
+    } catch (err) {
+      console.warn('AI analysis failed:', err instanceof Error ? err.message : err);
+      throw err; // Re-throw to show user-friendly error
     }
 
     const { data, error } = await supabase
