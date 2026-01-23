@@ -90,10 +90,13 @@ export default function AdminDashboard() {
       {/* Header */}
       <header className="flex items-center justify-between px-4 md:px-6 py-4 sticky top-0 z-50 border-b" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
         <div className="flex items-center gap-2 md:gap-4">
-          <Link href="/apps" className="text-sm px-2 md:px-3 py-2 rounded-lg transition-colors" style={{ color: 'var(--text-secondary)' }}>
-            ←<span className="hidden sm:inline"> Apps</span>
+          <Link href="/apps" className="text-sm px-2 md:px-3 py-2 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800" style={{ color: 'var(--text-secondary)' }}>
+            ← <span className="hidden sm:inline">Back to Apps</span>
           </Link>
-          <h1 className="text-base sm:text-xl font-bold" style={{ color: 'var(--accent)' }}>🔧 Admin Dashboard</h1>
+          <h1 className="text-base sm:text-xl font-bold flex items-center gap-2" style={{ color: 'var(--accent)' }}>
+            <span>🔧</span>
+            Admin Dashboard
+          </h1>
         </div>
         <div className="flex items-center gap-2 md:gap-4">
           <ThemeToggle />
@@ -126,7 +129,7 @@ export default function AdminDashboard() {
             <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Approved</div>
           </div>
           <div className="card p-4 text-center">
-            <div className="text-3xl font-bold" style={{ color: 'var(--error)' }}>{rejectedUsers.length}</div>
+            <div className="text-3xl font-bold" style={{ color: 'var(--danger)' }}>{rejectedUsers.length}</div>
             <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Rejected</div>
           </div>
         </div>

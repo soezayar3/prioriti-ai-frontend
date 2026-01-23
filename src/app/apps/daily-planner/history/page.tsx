@@ -1,24 +1,15 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import api, { DailyPlan } from '@/lib/api';
 import { Timeline } from '@/components/Timeline';
 
 export default function HistoryPage() {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [plans, setPlans] = useState<DailyPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<DailyPlan | null>(null);
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthenticated, authLoading, router]);
 
   useEffect(() => {
     async function fetchHistory() {
@@ -37,17 +28,12 @@ export default function HistoryPage() {
     }
   }, [isAuthenticated]);
 
-  if (authLoading) return null;
-
   return (
     <div className="min-h-screen flex flex-col md:flex-row" style={{ background: 'var(--bg-primary)' }}>
-      {/* Sidebar - History List */}
-      <aside className="w-full md:w-96 p-4 md:p-6 border-b md:border-b-0 md:border-r flex flex-col md:h-screen md:sticky md:top-0 overflow-y-auto" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
+      {/* Right Sidebar - History List */}
+      <aside className="w-full md:w-96 p-4 md:p-6 border-b md:border-b-0 md:border-l flex flex-col md:order-2 overflow-y-auto" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
         <div className="mb-8">
-          <button onClick={() => router.push('/apps/daily-planner')} className="flex items-center gap-2 mb-6 opacity-60 hover:opacity-100 transition-opacity">
-            <span>←</span> Back to Planner
-          </button>
-          <h1 className="text-xl md:text-2xl font-bold mb-2 icon-gradient">History</h1>
+          <h1 className="text-xl md:text-2xl font-bold mb-2 icon-gradient">📜 History</h1>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>View your past daily plans.</p>
         </div>
 
@@ -80,14 +66,10 @@ export default function HistoryPage() {
             ))
           )}
         </div>
-
-        <div className="mt-4 md:mt-8 pt-4 md:pt-6 border-t" style={{ borderColor: 'var(--border-color)' }}>
-           <ThemeToggle />
-        </div>
       </aside>
 
       {/* Main Content - Preview */}
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto bg-dots">
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto md:order-1">
         <div className="max-w-2xl mx-auto">
           {selectedPlan ? (
             <>

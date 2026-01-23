@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Toast } from "@/components/ui/Toast";
 import api, { JournalEntry } from "@/lib/api";
 
@@ -34,13 +33,14 @@ const moodEmojis: Record<string, string> = {
 };
 
 export default function MoodJournalPage() {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
 
   const [content, setContent] = useState("");
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showEntries, setShowEntries] = useState(false);
   const [toast, setToast] = useState<{
     show: boolean;
     message: string;
@@ -68,12 +68,6 @@ export default function MoodJournalPage() {
       setIsLoading(false);
     }
   }, []);
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push("/login");
-    }
-  }, [isAuthenticated, authLoading, router]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -109,145 +103,75 @@ export default function MoodJournalPage() {
     }
   };
 
-  if (authLoading) return null;
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
   return (
-    <div
-      className="min-h-screen flex flex-col md:flex-row"
-      style={{ background: "var(--bg-primary)" }}
-    >
-      {/* Sidebar - Entry Form */}
-      <aside
-        className="w-full md:w-96 p-4 md:p-6 border-b md:border-b-0 md:border-r flex flex-col md:h-screen md:sticky md:top-0"
-        style={{
-          background: "var(--bg-secondary)",
-          borderColor: "var(--border-color)",
-        }}
-      >
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() => router.push("/apps")}
-              className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity"
-            >
-              <span>←</span> Back
-            </button>
-            <button
-              onClick={() => router.push("/apps/mood-journal/insights")}
-              className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity text-sm"
-            >
-              📊 Insights
-            </button>
-          </div>
-          <h1 className="text-xl md:text-2xl font-bold mb-2 icon-gradient">
-            🌈 Mood Journal
-          </h1>
-          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-            Write 1-2 sentences about your day.
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Had a long day but finally fixed that bug. Feeling tired but proud."
-            className="w-full h-24 md:h-32 rounded-xl p-4 resize-none transition-all focus:ring-2 focus:ring-amber-500 outline-none"
-            style={{
-              background: "var(--bg-primary)",
-              border: "1px solid var(--border-color)",
-            }}
-            maxLength={1000}
-          />
+    <div className="min-h-screen" style={{ background: "var(--bg-primary)" }}>
+      {/* Page Header */}
+      <div className="flex items-center justify-between px-4 md:px-6 py-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
+        <h1 className="text-lg md:text-xl font-bold flex items-center gap-2" style={{ color: 'var(--accent)' }}>
+          <span>🌈</span>
+          Mood Journal
+        </h1>
+        <div className="flex items-center gap-2">
           <button
-            type="submit"
-            disabled={isSubmitting || !content.trim()}
-            className="btn-primary w-full py-3 flex items-center justify-center gap-2 disabled:opacity-50"
+            onClick={() => setShowEntries(!showEntries)}
+            className="btn-ghost text-sm"
           >
-            {isSubmitting ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Analyzing...
-              </>
-            ) : (
-              "✨ Save Entry"
-            )}
+            📝 <span className="hidden sm:inline">Entries </span>({entries.length})
           </button>
-        </form>
-
-        <div
-          className="mt-4 md:mt-8 pt-4 md:pt-6 border-t"
-          style={{ borderColor: "var(--border-color)" }}
-        >
-          <div className="flex items-center justify-between">
-            <ThemeToggle />
-            {/* <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-bold">
-                {user?.name?.[0]}
-              </div>
-            </div> */}
-          </div>
+          <button
+            onClick={() => router.push('/apps/mood-journal/insights')}
+            className="btn-ghost text-sm"
+          >
+            📊 <span className="hidden sm:inline">Insights</span>
+          </button>
         </div>
-      </aside>
+      </div>
 
-      {/* Main Content - Entries */}
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-xl font-bold mb-6">Recent Entries</h2>
-
+      <div className="flex relative">
+        {/* Entries Sidebar */}
+        <aside className={`fixed top-0 md:top-0 right-0 w-full sm:w-80 h-full border-l overflow-y-auto transition-transform duration-300 z-40 ${showEntries ? 'translate-x-0' : 'translate-x-full'}`} style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+          <div className="flex justify-between items-center px-5 py-4 border-b sticky top-0" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+            <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Recent Entries</h3>
+            <button onClick={() => setShowEntries(false)} className="text-lg opacity-60 hover:opacity-100" style={{ color: 'var(--text-secondary)' }}>✕</button>
+          </div>
+          
           {isLoading ? (
-            <div className="flex justify-center py-12">
-              <div className="w-8 h-8 border-3 border-gray-300 border-t-amber-500 rounded-full animate-spin" />
+            <div className="flex justify-center p-8">
+              <div className="w-6 h-6 border-2 border-gray-300 border-t-amber-500 rounded-full animate-spin" />
             </div>
           ) : entries.length === 0 ? (
-            <div className="text-center py-12 opacity-50">
-              <div className="text-5xl mb-4">📝</div>
-              <p>No entries yet. Start journaling!</p>
-            </div>
+            <p className="text-center p-8 text-sm" style={{ color: 'var(--text-secondary)' }}>No entries yet</p>
           ) : (
-            <div className="space-y-4">
+            <div className="flex flex-col">
               {entries.map((entry) => (
                 <div
                   key={entry.id}
-                  className="p-4 rounded-xl border transition-all hover:shadow-md"
-                  style={{
-                    background: "var(--bg-secondary)",
-                    borderColor: "var(--border-color)",
-                  }}
+                  className="px-5 py-4 border-b transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                  style={{ borderColor: 'var(--border-color)' }}
                 >
-                  <div className="flex items-start justify-between gap-4 mb-3">
-                    <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
                       {entry.mood_label && (
-                        <div
-                          className={`w-10 h-10 rounded-full ${moodColors[entry.mood_label] || "bg-gray-400"} flex items-center justify-center text-xl`}
-                        >
+                        <div className={`w-6 h-6 rounded-full ${moodColors[entry.mood_label] || "bg-gray-400"} flex items-center justify-center text-sm`}>
                           {moodEmojis[entry.mood_label] || "😐"}
                         </div>
                       )}
-                      <div>
-                        <span
-                          className="text-sm font-medium capitalize"
-                          style={{ color: "var(--text-primary)" }}
-                        >
-                          {entry.mood_label || "Unknown"}
-                        </span>
-                        {entry.mood_score !== null && (
-                          <div
-                            className="text-xs"
-                            style={{ color: "var(--text-secondary)" }}
-                          >
-                            Score: {(entry.mood_score * 100).toFixed(0)}%
-                          </div>
-                        )}
-                      </div>
+                      <span className="text-sm font-medium capitalize" style={{ color: 'var(--text-primary)' }}>
+                        {entry.mood_label || "Unknown"}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span
-                        className="text-xs"
-                        style={{ color: "var(--text-secondary)" }}
-                      >
-                        {new Date(entry.created_at).toLocaleDateString()}
-                      </span>
+                      <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{formatDate(entry.created_at)}</span>
                       <button
                         onClick={() => handleDelete(entry.id)}
                         className="opacity-40 hover:opacity-100 text-sm"
@@ -256,39 +180,154 @@ export default function MoodJournalPage() {
                       </button>
                     </div>
                   </div>
-
-                  <p className="mb-3" style={{ color: "var(--text-primary)" }}>
+                  <p className="text-xs line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
                     {entry.content}
                   </p>
-
-                  {entry.entities &&
-                    (entry.entities.activities?.length > 0 ||
-                      entry.entities.people?.length > 0) && (
-                      <div className="flex flex-wrap gap-2">
-                        {entry.entities.activities?.map((activity, i) => (
-                          <span
-                            key={i}
-                            className="text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-600"
-                          >
-                            {activity}
-                          </span>
-                        ))}
-                        {entry.entities.people?.map((person, i) => (
-                          <span
-                            key={i}
-                            className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-600"
-                          >
-                            {person}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                 </div>
               ))}
             </div>
           )}
-        </div>
-      </main>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 max-w-3xl mx-auto px-4 md:px-6 py-6 md:py-8">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6 animate-fade-in mb-8">
+            <div className="text-center mb-4">
+              <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>How are you feeling?</h2>
+              <p style={{ color: 'var(--text-secondary)' }}>Write 1-2 sentences about your day and let AI analyze your mood</p>
+            </div>
+
+            <div>
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Had a long day but finally fixed that bug. Feeling tired but proud."
+                className="w-full h-32 rounded-xl p-4 resize-none transition-all focus:ring-2 focus:ring-amber-500 outline-none"
+                style={{
+                  background: "var(--bg-secondary)",
+                  border: "1px solid var(--border-color)",
+                }}
+                maxLength={1000}
+              />
+              <div className="text-right mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+                {content.length}/1000
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting || !content.trim()}
+              className="btn-primary w-full py-4 text-lg flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Analyzing your mood...
+                </>
+              ) : (
+                "✨ Save Entry"
+              )}
+            </button>
+          </form>
+
+          {/* Recent Entries Preview */}
+          {entries.length > 0 && (
+            <div className="animate-fade-in">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Recent Entries</h3>
+                <button 
+                  onClick={() => setShowEntries(true)}
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--accent)' }}
+                >
+                  View all →
+                </button>
+              </div>
+              <div className="space-y-4">
+                {entries.slice(0, 3).map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="p-4 rounded-xl border transition-all hover:shadow-md"
+                    style={{
+                      background: "var(--bg-secondary)",
+                      borderColor: "var(--border-color)",
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-4 mb-3">
+                      <div className="flex items-center gap-3">
+                        {entry.mood_label && (
+                          <div
+                            className={`w-10 h-10 rounded-full ${moodColors[entry.mood_label] || "bg-gray-400"} flex items-center justify-center text-xl`}
+                          >
+                            {moodEmojis[entry.mood_label] || "😐"}
+                          </div>
+                        )}
+                        <div>
+                          <span
+                            className="text-sm font-medium capitalize"
+                            style={{ color: "var(--text-primary)" }}
+                          >
+                            {entry.mood_label || "Unknown"}
+                          </span>
+                          {entry.mood_score !== null && (
+                            <div
+                              className="text-xs"
+                              style={{ color: "var(--text-secondary)" }}
+                            >
+                              Score: {(entry.mood_score * 100).toFixed(0)}%
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="text-xs"
+                          style={{ color: "var(--text-secondary)" }}
+                        >
+                          {new Date(entry.created_at).toLocaleDateString()}
+                        </span>
+                        <button
+                          onClick={() => handleDelete(entry.id)}
+                          className="opacity-40 hover:opacity-100 text-sm"
+                        >
+                          🗑
+                        </button>
+                      </div>
+                    </div>
+
+                    <p className="mb-3" style={{ color: "var(--text-primary)" }}>
+                      {entry.content}
+                    </p>
+
+                    {entry.entities &&
+                      (entry.entities.activities?.length > 0 ||
+                        entry.entities.people?.length > 0) && (
+                        <div className="flex flex-wrap gap-2">
+                          {entry.entities.activities?.map((activity, i) => (
+                            <span
+                              key={i}
+                              className="text-xs px-2 py-1 rounded-full bg-amber-500/20 text-amber-600"
+                            >
+                              {activity}
+                            </span>
+                          ))}
+                          {entry.entities.people?.map((person, i) => (
+                            <span
+                              key={i}
+                              className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-600"
+                            >
+                              {person}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
 
       <Toast
         message={toast.message}

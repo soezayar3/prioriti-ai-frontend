@@ -1,10 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 interface AppInfo {
   slug: string;
@@ -46,82 +43,20 @@ const appRegistry: Record<string, AppInfo> = {
 const allApps = Object.values(appRegistry);
 
 export default function AppsPage() {
-  const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
-  const router = useRouter();
-  const [isPendingApproval, setIsPendingApproval] = useState(false);
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthenticated, authLoading, router]);
-
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      if (user.status === 'pending' || user.status === 'rejected') {
-        setIsPendingApproval(true);
-      }
-    }
-  }, [isAuthenticated, user]);
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
-        <div className="w-10 h-10 border-4 border-gray-300 border-t-indigo-500 rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  // Pending approval state
-  if (isPendingApproval) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: 'var(--bg-primary)' }}>
-        <div className="card max-w-md w-full text-center p-8">
-          <div className="text-6xl mb-6">{user?.status === 'rejected' ? '❌' : '⏳'}</div>
-          <h1 className="text-2xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
-            {user?.status === 'rejected' ? 'Access Denied' : 'Pending Approval'}
-          </h1>
-          <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
-            {user?.status === 'rejected' 
-              ? 'Your account was not approved. Please contact support.'
-              : 'Your account is pending admin approval. Please check back later.'
-            }
-          </p>
-          <button onClick={logout} className="btn-primary">Logout</button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
-      {/* Header */}
-      <header className="flex items-center justify-between px-4 md:px-6 py-4 sticky top-0 z-50 border-b" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-        <div className="flex items-center gap-2 md:gap-4">
-          <h1 className="text-xl md:text-2xl font-bold icon-gradient">🚀 PrioritiAI</h1>
-        </div>
-        <div className="flex items-center gap-2 md:gap-4">
-          <ThemeToggle />
-          {user?.role === 'admin' && (
-            <Link href="/admin" className="btn-ghost text-sm">
-              <span className="hidden sm:inline">🔧</span> Admin
-            </Link>
-          )}
-          {user?.role === 'admin' && (
-            <span className="hidden sm:inline text-xs px-2 py-1 rounded font-medium" style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}>Admin</span>
-          )}
-          <span className="hidden md:inline text-sm" style={{ color: 'var(--text-secondary)' }}>{user?.name}</span>
-          <button onClick={logout} className="btn-ghost text-sm">Logout</button>
-        </div>
-      </header>
-
-      {/* Main */}
-      <main className="max-w-6xl mx-auto px-6 py-12">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>Your AI Productivity Suite</h2>
-          <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>Choose an app to boost your productivity with AI</p>
+    <div className="p-6 md:p-8">
+      <div className="max-w-5xl mx-auto">
+        {/* Page Header */}
+        <div className="text-center mb-10">
+          <h2 className="text-2xl md:text-3xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
+            Your AI Productivity Suite
+          </h2>
+          <p className="text-base md:text-lg" style={{ color: 'var(--text-secondary)' }}>
+            Choose an app to boost your productivity with AI
+          </p>
         </div>
 
+        {/* App Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {allApps.map((app) => {
             const isComingSoon = app.route === '#';
@@ -149,7 +84,7 @@ export default function AppsPage() {
             );
           })}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

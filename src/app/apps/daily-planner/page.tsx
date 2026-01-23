@@ -1,15 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Timeline } from '@/components/Timeline';
 import { Toast } from '@/components/ui/Toast';
-import api, { ScheduledBlock } from '@/lib/api';
+import api, { ScheduledBlock, DailyPlan } from '@/lib/api';
 
 export default function DailyPlannerPage() {
-  const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
 
   const [brainDump, setBrainDump] = useState('');
@@ -18,6 +17,12 @@ export default function DailyPlannerPage() {
   const [schedule, setSchedule] = useState<ScheduledBlock[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
+  
+  // History state
+  const [planHistory, setPlanHistory] = useState<DailyPlan[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<DailyPlan | null>(null);
 
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' | 'info' }>({
     show: false,
@@ -29,17 +34,30 @@ export default function DailyPlannerPage() {
     setToast({ show: true, message, type });
   };
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/login');
+  const fetchHistory = useCallback(async () => {
+    setIsLoadingHistory(true);
+    try {
+      const data = await api.getDailyPlans();
+      setPlanHistory(data.plans);
+    } catch (err) {
+      console.error('Failed to load history:', err);
+    } finally {
+      setIsLoadingHistory(false);
     }
-  }, [isAuthenticated, authLoading, router]);
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchHistory();
+    }
+  }, [isAuthenticated, fetchHistory]);
 
   const handleGenerate = async () => {
     if (!brainDump.trim()) return;
     
     setIsGenerating(true);
     setError('');
+    setSelectedPlan(null);
     
     try {
       const result = await api.generateDailyPlan(brainDump, startTime, endTime);
@@ -55,125 +73,188 @@ export default function DailyPlannerPage() {
   const handleSave = async () => {
     if (schedule.length === 0) return;
     try {
-      // Use today's date formatted as YYYY-MM-DD
       const today = new Date().toISOString().split('T')[0];
       await api.saveDailyPlan(today, schedule, brainDump);
       showToast('Schedule saved successfully!', 'success');
+      fetchHistory();
     } catch (err) {
       console.error('Failed to save plan:', err);
       showToast('Failed to save schedule.', 'error');
     }
   };
 
-  if (authLoading) return null;
+  const handleSelectPlan = (plan: DailyPlan) => {
+    setSelectedPlan(plan);
+    setSchedule(plan.schedule);
+    setBrainDump(plan.original_input || '');
+    setShowHistory(false);
+  };
+
+  const handleNewPlan = () => {
+    setSelectedPlan(null);
+    setSchedule([]);
+    setBrainDump('');
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row" style={{ background: 'var(--bg-primary)' }}>
-      {/* Sidebar - Input */}
-      <aside className="w-full md:w-96 p-4 md:p-6 border-b md:border-b-0 md:border-r flex flex-col md:h-screen md:sticky md:top-0 overflow-y-auto" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <button onClick={() => router.push('/apps')} className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity">
-              <span>←</span> Back
-            </button>
-            <button onClick={() => router.push('/apps/daily-planner/history')} className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity text-sm">
-              📜 History
-            </button>
-          </div>
-          <h1 className="text-xl md:text-2xl font-bold mb-2 icon-gradient">Daily Planner</h1>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Turn your tasks into a realistic schedule.</p>
-        </div>
+    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+      {/* Page Header */}
+      <div className="flex items-center justify-between px-4 md:px-6 py-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
+        <h1 className="text-lg md:text-xl font-bold flex items-center gap-2" style={{ color: 'var(--accent)' }}>
+          <span>📅</span>
+          Daily Planner
+        </h1>
+        <button
+          onClick={() => setShowHistory(!showHistory)}
+          className="btn-ghost text-sm"
+        >
+          📜 <span className="hidden sm:inline">History </span>({planHistory.length})
+        </button>
+      </div>
 
-        <div className="flex-1 flex flex-col gap-6">
-          {/* Brain Dump Input */}
-          <div>
-            <label className="block text-sm font-medium mb-2 opacity-80">Brain Dump</label>
-            <textarea
-              value={brainDump}
-              onChange={(e) => setBrainDump(e.target.value)}
-              placeholder="What do you need to get done today? e.g.&#10;- Finish report (2h)&#10;- Call mom&#10;- Review PRs"
-              className="w-full h-32 md:h-48 rounded-xl p-4 resize-none transition-all focus:ring-2 focus:ring-indigo-500 outline-none"
-              style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)' }}
-            />
+      <div className="flex relative">
+        {/* History Sidebar */}
+        <aside className={`fixed top-0 md:top-0 right-0 w-full sm:w-80 h-full border-l overflow-y-auto transition-transform duration-300 z-40 ${showHistory ? 'translate-x-0' : 'translate-x-full'}`} style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+          <div className="flex justify-between items-center px-5 py-4 border-b sticky top-0" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+            <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Plan History</h3>
+            <button onClick={() => setShowHistory(false)} className="text-lg opacity-60 hover:opacity-100" style={{ color: 'var(--text-secondary)' }}>✕</button>
           </div>
-
-          {/* Time Inputs */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2 opacity-80">Start Time</label>
-              <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="w-full rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500"
-                style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)' }}
-              />
+          
+          {isLoadingHistory ? (
+            <div className="flex justify-center p-8">
+              <div className="w-6 h-6 border-2 border-gray-300 border-t-emerald-500 rounded-full animate-spin" />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2 opacity-80">End Time</label>
-              <input
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="w-full rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500"
-                style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)' }}
-              />
-            </div>
-          </div>
-
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-
-          <button
-            onClick={handleGenerate}
-            disabled={isGenerating || !brainDump.trim()}
-            className="btn-primary w-full py-3 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isGenerating ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Planning...
-              </>
-            ) : (
-              '✨ Generate Schedule'
-            )}
-          </button>
-        </div>
-{/* 
-        <div className="mt-4 md:mt-8 pt-4 md:pt-6 border-t" style={{ borderColor: 'var(--border-color)' }}>
-          <div className="flex items-center justify-between">
-            <ThemeToggle />
-            <div className="flex items-center gap-3">
-               <span className="text-xs px-2 py-1 rounded font-medium" style={{ background: 'var(--bg-tertiary)' }}>{user?.role}</span>
-              <div className="w-8 h-8 rounded-full bg-linear-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
-                {user?.name?.[0]}
-              </div>
-            </div>
-          </div>
-        </div> */}
-      </aside>
-
-      {/* Main Content - Timeline */}
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-        <div className="max-w-2xl mx-auto">
-          {schedule.length > 0 ? (
-            <>
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-xl font-bold">Your Schedule</h2>
-                <button onClick={handleSave} className="btn-ghost flex items-center gap-2">
-                  💾 Save Plan
-                </button>
-              </div>
-              <Timeline schedule={schedule} />
-            </>
+          ) : planHistory.length === 0 ? (
+            <p className="text-center p-8 text-sm" style={{ color: 'var(--text-secondary)' }}>No previous plans</p>
           ) : (
-             <div className="h-full flex flex-col items-center justify-center opacity-40 mt-20">
-              <div className="text-6xl mb-4">📅</div>
-              <p className="text-xl font-medium">Ready to plan your day?</p>
-              <p className="text-sm max-w-xs text-center mt-2">Enter your tasks and work hours on the left to generate an AI-optimized schedule.</p>
+            <div className="flex flex-col">
+              {planHistory.map((plan) => (
+                <div
+                  key={plan.id}
+                  className={`px-5 py-4 border-b cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 ${selectedPlan?.id === plan.id ? 'border-l-4 border-l-emerald-500 bg-gray-50 dark:bg-gray-800' : ''}`}
+                  style={{ borderColor: 'var(--border-color)' }}
+                  onClick={() => handleSelectPlan(plan)}
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                      {new Date(plan.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                    </span>
+                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{formatDate(plan.created_at)}</span>
+                  </div>
+                  <p className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>
+                    {plan.original_input?.slice(0, 60) || 'No description'}...
+                  </p>
+                  <div className="mt-2 text-xs" style={{ color: 'var(--accent)' }}>
+                    {plan.schedule.length} blocks
+                  </div>
+                </div>
+              ))}
             </div>
           )}
-        </div>
-      </main>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 max-w-3xl mx-auto px-4 md:px-6 py-6 md:py-8">
+          {schedule.length > 0 || selectedPlan ? (
+            <div className="animate-fade-in">
+              <div className="flex items-start justify-between gap-4 mb-8 flex-wrap">
+                <div>
+                  <h2 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+                    {selectedPlan ? `Schedule for ${new Date(selectedPlan.date).toDateString()}` : 'Your Schedule'}
+                  </h2>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    {schedule.length} time blocks
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  {!selectedPlan && (
+                    <button onClick={handleSave} className="btn-secondary flex items-center gap-2">
+                      💾 Save
+                    </button>
+                  )}
+                  <button onClick={handleNewPlan} className="btn-secondary">+ New Plan</button>
+                </div>
+              </div>
+              
+              <Timeline schedule={schedule} />
+            </div>
+          ) : (
+            <form onSubmit={(e) => { e.preventDefault(); handleGenerate(); }} className="flex flex-col gap-6 animate-fade-in">
+              <div className="text-center mb-4">
+                <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Plan Your Day</h2>
+                <p style={{ color: 'var(--text-secondary)' }}>Enter your tasks and let AI create the perfect schedule</p>
+              </div>
+
+              {error && (
+                <div className="px-4 py-3 rounded-lg text-center text-sm" style={{ background: 'var(--danger-light)', color: 'var(--danger)' }}>
+                  {error}
+                </div>
+              )}
+
+              {/* Brain Dump Input */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Brain Dump</label>
+                <textarea
+                  value={brainDump}
+                  onChange={(e) => setBrainDump(e.target.value)}
+                  placeholder="What do you need to get done today? e.g.&#10;- Finish report (2h)&#10;- Call mom&#10;- Review PRs"
+                  className="w-full h-40 rounded-xl p-4 resize-none transition-all focus:ring-2 focus:ring-emerald-500 outline-none"
+                  style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
+                />
+              </div>
+
+              {/* Time Inputs */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Start Time</label>
+                  <input
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className="w-full rounded-lg p-3 outline-none focus:ring-2 focus:ring-emerald-500"
+                    style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>End Time</label>
+                  <input
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    className="w-full rounded-lg p-3 outline-none focus:ring-2 focus:ring-emerald-500"
+                    style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isGenerating || !brainDump.trim()}
+                className="btn-primary w-full py-4 text-lg flex items-center justify-center gap-2"
+              >
+                {isGenerating ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    AI is planning your day...
+                  </>
+                ) : (
+                  '✨ Generate Schedule'
+                )}
+              </button>
+            </form>
+          )}
+        </main>
+      </div>
 
       <Toast 
         message={toast.message}

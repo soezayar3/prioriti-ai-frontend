@@ -1,18 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { BrainDump } from '@/components/BrainDump';
 import { EnergySelector, EnergyLevel } from '@/components/EnergySelector';
 import { TaskCard } from '@/components/TaskCard';
 import api, { Schedule, Task } from '@/lib/api';
 
 export default function TaskPrioritizerPage() {
-  const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
-  const router = useRouter();
+  const { isAuthenticated } = useAuth();
   
   const [brainDump, setBrainDump] = useState('');
   const [energyLevel, setEnergyLevel] = useState<EnergyLevel | ''>('');
@@ -34,12 +30,6 @@ export default function TaskPrioritizerPage() {
       setIsLoadingHistory(false);
     }
   }, []);
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthenticated, authLoading, router]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -135,46 +125,25 @@ export default function TaskPrioritizerPage() {
     });
   };
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
-        <div className="w-10 h-10 border-4 border-gray-300 border-t-indigo-500 rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
-      {/* Header */}
-      <header className="flex items-center justify-between px-4 md:px-6 py-4 sticky top-0 z-50 border-b" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-        <div className="flex items-center gap-2 md:gap-4">
-          <Link href="/apps" className="text-sm px-2 md:px-3 py-2 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800" style={{ color: 'var(--text-secondary)' }}>
-            ←<span className="hidden sm:inline"> Apps</span>
-          </Link>
-          <h1 className="text-base sm:text-xl font-bold" style={{ color: 'var(--accent)' }}>✨ <span className="hidden xs:inline">Task </span>Prioritizer</h1>
-        </div>
-        <div className="flex items-center gap-2 md:gap-4">
-          <button
-            onClick={() => setShowHistory(!showHistory)}
-            className="btn-ghost text-sm"
-          >
-            📋 <span className="hidden sm:inline">History </span>({scheduleHistory.length})
-          </button>
-          <ThemeToggle />
-          <div className="flex items-center gap-2 md:gap-3">
-            <span className="hidden md:inline text-sm" style={{ color: 'var(--text-secondary)' }}>{user?.name}</span>
-            <button onClick={logout} className="btn-ghost text-sm">Logout</button>
-          </div>
-        </div>
-      </header>
+      {/* Page Header */}
+      <div className="flex items-center justify-between px-4 md:px-6 py-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
+        <h1 className="text-lg md:text-xl font-bold flex items-center gap-2" style={{ color: 'var(--accent)' }}>
+          <span>✨</span>
+          Task Prioritizer
+        </h1>
+        <button
+          onClick={() => setShowHistory(!showHistory)}
+          className="btn-ghost text-sm"
+        >
+          📋 <span className="hidden sm:inline">History </span>({scheduleHistory.length})
+        </button>
+      </div>
 
       <div className="flex relative">
         {/* History Sidebar */}
-        <aside className={`fixed top-[65px] right-0 w-full sm:w-80 h-[calc(100vh-65px)] border-l overflow-y-auto transition-transform duration-300 z-40 ${showHistory ? 'translate-x-0' : 'translate-x-full'}`} style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+        <aside className={`fixed top-0 md:top-0 right-0 w-full sm:w-80 h-full border-l overflow-y-auto transition-transform duration-300 z-40 ${showHistory ? 'translate-x-0' : 'translate-x-full'}`} style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
           <div className="flex justify-between items-center px-5 py-4 border-b sticky top-0" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
             <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>Task History</h3>
             <button onClick={() => setShowHistory(false)} className="text-lg opacity-60 hover:opacity-100" style={{ color: 'var(--text-secondary)' }}>✕</button>

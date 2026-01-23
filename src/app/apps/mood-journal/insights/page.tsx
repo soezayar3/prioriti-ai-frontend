@@ -1,14 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import api, { JournalInsights } from '@/lib/api';
 
 export default function InsightsPage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   const [insights, setInsights] = useState<JournalInsights | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -16,12 +14,6 @@ export default function InsightsPage() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isAuthenticated, authLoading, router]);
 
   useEffect(() => {
     async function fetchInsights() {
@@ -53,29 +45,31 @@ export default function InsightsPage() {
     return '😔';
   };
 
-  if (authLoading) return null;
-
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
-      {/* Header */}
-      <header className="flex items-center justify-between px-4 md:px-6 py-4 sticky top-0 z-50 border-b" style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-        <div className="flex items-center gap-2 md:gap-4">
-          <button onClick={() => router.push('/apps/mood-journal')} className="text-sm px-2 md:px-3 py-2 rounded-lg transition-colors" style={{ color: 'var(--text-secondary)' }}>
-            ←<span className="hidden sm:inline"> Journal</span>
-          </button>
-          <h1 className="text-base sm:text-xl font-bold" style={{ color: 'var(--accent)' }}>📊 Monthly Insights</h1>
+      {/* Page Header */}
+      <div className="flex items-center justify-between px-4 md:px-6 py-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
+        <div className="flex items-center gap-3">
+          <Link 
+            href="/apps/mood-journal" 
+            className="p-2 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            ←
+          </Link>
+          <h1 className="text-lg md:text-xl font-bold flex items-center gap-2" style={{ color: 'var(--accent)' }}>
+            <span>📊</span>
+            Monthly Insights
+          </h1>
         </div>
-        <div className="flex items-center gap-2 md:gap-4">
-          <input
-            type="month"
-            value={month}
-            onChange={(e) => setMonth(e.target.value)}
-            className="text-sm px-3 py-2 rounded-lg"
-            style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)' }}
-          />
-          <ThemeToggle />
-        </div>
-      </header>
+        <input
+          type="month"
+          value={month}
+          onChange={(e) => setMonth(e.target.value)}
+          className="text-sm px-3 py-2 rounded-lg"
+          style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)' }}
+        />
+      </div>
 
       <main className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-8">
         {isLoading ? (
